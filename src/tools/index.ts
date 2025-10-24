@@ -18,7 +18,7 @@ export const registerTools = (server: McpServer): void => {
 
 const registerVerifyConnectionTool = (server: McpServer): void => {
   server.registerTool(
-    'railway.verify_connection',
+    'railway_verify_connection',
     {
       title: 'Verify Railway Connection',
       description: 'Checks that the Railway SDK can authenticate using environment tokens.',

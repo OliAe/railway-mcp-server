@@ -40,7 +40,7 @@ const deploymentIdSchema = z
 
 export const registerDeploymentTools = (server: McpServer): void => {
   server.registerTool(
-    'railway.deployment.list',
+    'railway_deployment_list',
     {
       title: 'List Deployments',
       description: 'List deployments for a project, optionally filtered.',
@@ -162,7 +162,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway.deployment.get',
+    'railway_deployment_get',
     {
       title: 'Get Deployment',
       description: 'Fetch detailed information about a deployment.',
@@ -196,7 +196,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway.deployment.logs',
+    'railway_deployment_logs',
     {
       title: 'Get Deployment Logs',
       description: 'Fetch logs for a deployment.',
@@ -242,7 +242,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway.deployment.redeploy',
+    'railway_deployment_redeploy',
     {
       title: 'Redeploy',
       description: 'Redeploy a previous deployment, optionally reusing the image tag.',

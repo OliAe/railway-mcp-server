@@ -19,7 +19,7 @@ const serviceIdSchema = z.string().min(1, 'Service ID is required').describe('Th
 
 export const registerVariableTools = (server: McpServer): void => {
   server.registerTool(
-    'railway.variables.render_for_deployment',
+    'railway_variables_render_for_deployment',
     {
       title: 'Render Deployment Variables',
       description: 'Resolve the concrete variables that will be present for a service deployment.',
@@ -51,7 +51,7 @@ export const registerVariableTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway.variable.upsert',
+    'railway_variable_upsert',
     {
       title: 'Upsert Variable',
       description: 'Create or update a variable at the project or service scope.',

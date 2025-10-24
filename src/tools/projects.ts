@@ -15,7 +15,7 @@ type ProjectScheduleDeleteResult = Awaited<ReturnType<typeof projectScheduleDele
 
 export const registerProjectTools = (server: McpServer): void => {
   server.registerTool(
-    'railway.project.get',
+    'railway_project_get',
     {
       title: 'Get Project',
       description: 'Retrieve high-level information about a project.',
@@ -46,7 +46,7 @@ export const registerProjectTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway.project.schedule_delete',
+    'railway_project_schedule_delete',
     {
       title: 'Schedule Project Deletion',
       description: 'Schedules a project for deletion, applying the standard 48 hour grace period.',

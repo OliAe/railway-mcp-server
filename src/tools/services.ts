@@ -20,7 +20,7 @@ type ServiceUpdateResult = Awaited<ReturnType<typeof serviceUpdate>>;
 
 export const registerServiceTools = (server: McpServer): void => {
   server.registerTool(
-    'railway.service.get',
+    'railway_service_get',
     {
       title: 'Get Service',
       description: 'Retrieve details about a specific service.',
@@ -52,7 +52,7 @@ export const registerServiceTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway.service.update',
+    'railway_service_update',
     {
       title: 'Update Service',
       description: "Update a service's metadata such as name or icon.",
@@ -94,7 +94,7 @@ export const registerServiceTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway.service.deploy_latest',
+    'railway_service_deploy_latest',
     {
       title: 'Deploy Service (Latest Commit)',
       description:
