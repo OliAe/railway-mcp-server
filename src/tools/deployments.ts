@@ -135,23 +135,25 @@ export const registerDeploymentTools = (server: McpServer): void => {
         const client = getRailwayClient();
 
         const data: DeploymentsResult = await fetchDeployments(client, {
-          input: {
-            projectId,
-            serviceId: serviceId ?? null,
-            environmentId: environmentId ?? null,
-            includeDeleted: includeDeleted ?? null,
-            status:
-              statusIn || statusNotIn
-                ? {
-                    in: statusIn ?? null,
-                    notIn: statusNotIn ?? null,
-                  }
-                : null,
+          variables: {
+            input: {
+              projectId,
+              serviceId: serviceId ?? null,
+              environmentId: environmentId ?? null,
+              includeDeleted: includeDeleted ?? null,
+              status:
+                statusIn || statusNotIn
+                  ? {
+                      in: statusIn ?? null,
+                      notIn: statusNotIn ?? null,
+                    }
+                  : null,
+            },
+            first: first ?? null,
+            after: after ?? null,
+            last: last ?? null,
+            before: before ?? null,
           },
-          first: first ?? null,
-          after: after ?? null,
-          last: last ?? null,
-          before: before ?? null,
         });
 
         return successResponse(data);
@@ -185,7 +187,9 @@ export const registerDeploymentTools = (server: McpServer): void => {
       try {
         const client = getRailwayClient();
         const data: DeploymentResult = await fetchDeployment(client, {
-          id: deploymentId,
+          variables: {
+            id: deploymentId,
+          },
         });
 
         return successResponse(data);
@@ -227,11 +231,13 @@ export const registerDeploymentTools = (server: McpServer): void => {
       try {
         const client = getRailwayClient();
         const result: DeploymentLogsResult = await fetchDeploymentLogs(client, {
-          deploymentId,
-          limit: limit ?? null,
-          filter: filter ?? null,
-          startDate: startDate ?? null,
-          endDate: endDate ?? null,
+          variables: {
+            deploymentId,
+            limit: limit ?? null,
+            filter: filter ?? null,
+            startDate: startDate ?? null,
+            endDate: endDate ?? null,
+          },
         });
 
         return successResponse({ logs: result.deploymentLogs });
@@ -270,8 +276,10 @@ export const registerDeploymentTools = (server: McpServer): void => {
       try {
         const client = getRailwayClient();
         const result: DeploymentRedeployResult = await deploymentRedeploy(client, {
-          id: deploymentId,
-          usePreviousImageTag: usePreviousImageTag ?? null,
+          variables: {
+            id: deploymentId,
+            usePreviousImageTag: usePreviousImageTag ?? null,
+          },
         });
 
         return successResponse({ deployment: result.deploymentRedeploy });

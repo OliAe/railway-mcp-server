@@ -80,13 +80,15 @@ export const registerProjectTools = (server: McpServer): void => {
         const client = getRailwayClient();
 
         const data: ProjectsQueryResult = await fetchProjects(client, {
-          userId: userId ?? null,
-          workspaceId: workspaceId ?? null,
-          includeDeleted: includeDeleted ?? null,
-          first: first ?? null,
-          after: after ?? null,
-          last: last ?? null,
-          before: before ?? null,
+          variables: {
+            userId: userId ?? null,
+            workspaceId: workspaceId ?? null,
+            includeDeleted: includeDeleted ?? null,
+            first: first ?? null,
+            after: after ?? null,
+            last: last ?? null,
+            before: before ?? null,
+          },
         });
 
         return successResponse(data);
@@ -117,7 +119,9 @@ export const registerProjectTools = (server: McpServer): void => {
       try {
         const client = getRailwayClient();
         const data: ProjectQueryResult = await fetchProject(client, {
-          id: projectId,
+          variables: {
+            id: projectId,
+          },
         });
 
         return successResponse(data);
@@ -143,7 +147,9 @@ export const registerProjectTools = (server: McpServer): void => {
       try {
         const client = getRailwayClient();
         const result: ProjectScheduleDeleteResult = await projectScheduleDelete(client, {
-          id: projectId,
+          variables: {
+            id: projectId,
+          },
         });
 
         return successResponse({ scheduled: result.projectScheduleDelete });

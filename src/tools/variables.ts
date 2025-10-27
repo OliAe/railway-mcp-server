@@ -36,9 +36,11 @@ export const registerVariableTools = (server: McpServer): void => {
       try {
         const client = getRailwayClient();
         const result = await fetchVariablesForDeployment(client, {
-          projectId,
-          environmentId,
-          serviceId,
+          variables: {
+            projectId,
+            environmentId,
+            serviceId,
+          },
         });
 
         return successResponse({
@@ -74,13 +76,15 @@ export const registerVariableTools = (server: McpServer): void => {
       try {
         const client = getRailwayClient();
         const result = await variableUpsert(client, {
-          input: {
-            projectId,
-            environmentId,
-            name,
-            value,
-            serviceId: serviceId ?? null,
-            skipDeploys: skipDeploys ?? null,
+          variables: {
+            input: {
+              projectId,
+              environmentId,
+              name,
+              value,
+              serviceId: serviceId ?? null,
+              skipDeploys: skipDeploys ?? null,
+            },
           },
         });
 

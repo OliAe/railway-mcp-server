@@ -41,7 +41,9 @@ export const registerServiceTools = (server: McpServer): void => {
       try {
         const client = getRailwayClient();
         const data: ServiceQueryResult = await fetchService(client, {
-          id: serviceId,
+          variables: {
+            id: serviceId,
+          },
         });
 
         return successResponse(data);
@@ -79,10 +81,12 @@ export const registerServiceTools = (server: McpServer): void => {
       try {
         const client = getRailwayClient();
         const result: ServiceUpdateResult = await serviceUpdate(client, {
-          id: serviceId,
-          input: {
-            name: name ?? null,
-            icon: icon ?? null,
+          variables: {
+            id: serviceId,
+            input: {
+              name: name ?? null,
+              icon: icon ?? null,
+            },
           },
         });
 
@@ -111,13 +115,15 @@ export const registerServiceTools = (server: McpServer): void => {
     async ({ serviceId, environmentId, commitSha }) => {
       try {
         const client = getRailwayClient();
-        const deploymentId = await serviceInstanceDeployV2(client, {
-          serviceId,
-          environmentId,
-          commitSha: commitSha ?? null,
+        const result = await serviceInstanceDeployV2(client, {
+          variables: {
+            serviceId,
+            environmentId,
+            commitSha: commitSha ?? null,
+          },
         });
 
-        return successResponse({ deploymentId });
+        return successResponse({ deploymentId: result.serviceInstanceDeployV2 });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
