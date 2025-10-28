@@ -7,6 +7,7 @@ import { registerProjectTools } from './projects.js';
 import { registerServiceTools } from './services.js';
 import { registerTemplateTools } from './templates.js';
 import { registerVariableTools } from './variables.js';
+import { registerWorkflowTools } from './workflows.js';
 import { errorResponse, successResponse } from './responses.js';
 
 export const registerTools = (server: McpServer): void => {
@@ -16,6 +17,7 @@ export const registerTools = (server: McpServer): void => {
   registerDeploymentTools(server);
   registerVariableTools(server);
   registerTemplateTools(server);
+  registerWorkflowTools(server);
 };
 
 const registerVerifyConnectionTool = (server: McpServer): void => {

@@ -160,6 +160,12 @@ export const registerTemplateTools = (server: McpServer): void => {
           projectId: z.string(),
           workflowId: z.string().nullable(),
         }),
+        workflow: z
+          .object({
+            status: z.string(),
+            error: z.string().nullable(),
+          })
+          .optional(),
       },
     },
     async ({
@@ -179,6 +185,10 @@ export const registerTemplateTools = (server: McpServer): void => {
 
       if (!projectId && !workspaceId) {
         return errorResponse('Provide a projectId or workspaceId for the deployment target.');
+      }
+
+      if (projectId && !environmentId) {
+        return errorResponse('environmentId is required when deploying into an existing project.');
       }
 
       try {
@@ -239,7 +249,37 @@ export const registerTemplateTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse({ deployment: result.templateDeployV2 });
+        const deployment = result.templateDeployV2;
+
+        if (!deployment) {
+          return errorResponse('Railway did not return deployment details.');
+        }
+
+        let workflowStatusResult: { status: string; error: string | null } | undefined;
+
+        if (deployment.workflowId) {
+          try {
+            const status = await railway.projects.workflows.status({
+              variables: { workflowId: deployment.workflowId },
+            });
+
+            if (status.workflowStatus) {
+              workflowStatusResult = {
+                status: status.workflowStatus.status,
+                error: status.workflowStatus.error,
+              };
+            }
+          } catch (statusError) {
+            workflowStatusResult = {
+              status: 'UNKNOWN',
+              error: statusError instanceof Error ? statusError.message : String(statusError),
+            };
+          }
+        }
+
+        return successResponse(
+          workflowStatusResult ? { deployment, workflow: workflowStatusResult } : { deployment },
+        );
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
