@@ -88,6 +88,76 @@ export const registerProjectTools = (server: McpServer): void => {
   );
 
   server.registerTool(
+    'railway_project_create',
+    {
+      title: 'Create Project',
+      description: 'Create a new Railway project.',
+      inputSchema: {
+        name: z
+          .string()
+          .trim()
+          .min(1, 'Project name is required')
+          .describe('Name for the project.'),
+        workspaceId: z
+          .string()
+          .trim()
+          .min(1)
+          .describe('Workspace ID to create the project in.')
+          .optional(),
+        description: z.string().trim().describe('Optional description for the project.').optional(),
+        isPublic: z
+          .boolean()
+          .describe('If true, the project will be publicly accessible.')
+          .optional(),
+        prDeploys: z.boolean().describe('Enable pull request deployments by default.').optional(),
+        defaultEnvironmentName: z
+          .string()
+          .trim()
+          .min(1)
+          .describe('Name for the initial environment (defaults to "production" if omitted).')
+          .optional(),
+      },
+      outputSchema: {
+        project: z.object({
+          id: z.string(),
+          name: z.string(),
+          description: z.string().nullable(),
+          isPublic: z.boolean(),
+          prDeploys: z.boolean(),
+          createdAt: z.string(),
+          updatedAt: z.string(),
+          baseEnvironmentId: z.string().nullable(),
+          teamId: z.string().nullable(),
+        }),
+      },
+    },
+    async ({ name, workspaceId, description, isPublic, prDeploys, defaultEnvironmentName }) => {
+      try {
+        const railway = getRailway();
+        const result = await railway.projects.create({
+          variables: {
+            input: {
+              isMonorepo: false,
+              repo: null,
+              runtime: null,
+              name,
+              workspaceId: workspaceId ?? null,
+              description: description ?? null,
+              isPublic: isPublic ?? null,
+              prDeploys: prDeploys ?? null,
+              defaultEnvironmentName: defaultEnvironmentName ?? null,
+            },
+          },
+        });
+
+        return successResponse({ project: result.projectCreate });
+      } catch (error) {
+        return errorResponse(toRailwayErrorMessage(error));
+      }
+    },
+  );
+
+  server.registerTool(
     'railway_project_get',
     {
       title: 'Get Project',

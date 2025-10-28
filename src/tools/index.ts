@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 import { getEnvToken, getRailway, toRailwayErrorMessage } from '../client.js';
 import { registerDeploymentTools } from './deployments.js';
+import { registerDomainTools } from './domains.js';
+import { registerEnvironmentTools } from './environments.js';
 import { registerProjectTools } from './projects.js';
 import { registerServiceTools } from './services.js';
 import { registerTemplateTools } from './templates.js';
@@ -15,8 +17,10 @@ export const registerTools = (server: McpServer): void => {
   registerProjectTools(server);
   registerServiceTools(server);
   registerDeploymentTools(server);
+  registerEnvironmentTools(server);
   registerVariableTools(server);
   registerTemplateTools(server);
+  registerDomainTools(server);
   registerWorkflowTools(server);
 };
 
