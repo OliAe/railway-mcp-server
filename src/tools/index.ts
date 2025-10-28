@@ -6,6 +6,7 @@ import { registerDeploymentTools } from './deployments.js';
 import { registerDomainTools } from './domains.js';
 import { registerEnvironmentTools } from './environments.js';
 import { registerIntegrationTools } from './integrations.js';
+import { registerNetworkingTools } from './networking.js';
 import { registerObservabilityTools } from './observability.js';
 import { registerProjectTools } from './projects.js';
 import { registerServiceTools } from './services.js';
@@ -27,6 +28,7 @@ export const registerTools = (server: McpServer): void => {
   registerVolumeTools(server);
   registerObservabilityTools(server);
   registerIntegrationTools(server);
+  registerNetworkingTools(server);
   registerWorkflowTools(server);
 };
 
