@@ -15,6 +15,79 @@ const environmentIdSchema = z
 
 export const registerServiceTools = (server: McpServer): void => {
   server.registerTool(
+    'railway_services_list',
+    {
+      title: 'List Services',
+      description: 'List all services in a project.',
+      inputSchema: {
+        projectId: z.string().min(1, 'Project ID is required').describe('The ID of the project.'),
+        first: z
+          .number()
+          .int()
+          .positive()
+          .max(100)
+          .describe('Maximum number of items to return.')
+          .optional(),
+        last: z
+          .number()
+          .int()
+          .positive()
+          .max(100)
+          .describe('Fetch items in reverse order (use with before).')
+          .optional(),
+        after: z.string().describe('Cursor for the next page.').optional(),
+        before: z.string().describe('Cursor for the previous page.').optional(),
+      },
+      outputSchema: {
+        services: z.object({
+          edges: z.array(
+            z.object({
+              cursor: z.string(),
+              node: z.object({
+                id: z.string(),
+                name: z.string(),
+                icon: z.string().nullable(),
+                createdAt: z.string(),
+                updatedAt: z.string(),
+                deletedAt: z.string().nullable(),
+                projectId: z.string(),
+              }),
+            }),
+          ),
+          pageInfo: z.object({
+            hasNextPage: z.boolean(),
+            hasPreviousPage: z.boolean(),
+            startCursor: z.string().nullable(),
+            endCursor: z.string().nullable(),
+          }),
+        }),
+      },
+    },
+    async ({ projectId, first, after, last, before }) => {
+      if (first !== undefined && last !== undefined) {
+        return errorResponse('Provide either first or last, not both.');
+      }
+
+      try {
+        const railway = getRailway();
+        const data = await railway.services.list({
+          variables: {
+            projectId,
+            first: first ?? null,
+            after: after ?? null,
+            last: last ?? null,
+            before: before ?? null,
+          },
+        });
+
+        return successResponse({ services: data.project.services });
+      } catch (error) {
+        return errorResponse(toRailwayErrorMessage(error));
+      }
+    },
+  );
+
+  server.registerTool(
     'railway_service_get',
     {
       title: 'Get Service',
