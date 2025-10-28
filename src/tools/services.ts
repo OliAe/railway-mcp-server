@@ -197,4 +197,90 @@ export const registerServiceTools = (server: McpServer): void => {
       }
     },
   );
+
+  server.registerTool(
+    'railway_service_create',
+    {
+      title: 'Create Service',
+      description: 'Create a new service in a project.',
+      inputSchema: {
+        projectId: z.string().min(1, 'Project ID is required').describe('The ID of the project.'),
+        name: z.string().trim().min(1).describe('Name for the service.').optional(),
+        icon: z.string().trim().describe('Icon URL for the service.').optional(),
+        branch: z.string().trim().describe('Git branch for the service.').optional(),
+        environmentId: z
+          .string()
+          .trim()
+          .describe('Environment ID where the service will be created.')
+          .optional(),
+      },
+      outputSchema: {
+        service: z.object({
+          id: z.string(),
+          name: z.string(),
+          projectId: z.string(),
+          icon: z.string().nullable(),
+          createdAt: z.string(),
+        }),
+      },
+    },
+    async ({ projectId, name, icon, branch, environmentId }) => {
+      try {
+        const railway = getRailway();
+        const result = await railway.services.create({
+          variables: {
+            input: {
+              projectId,
+              name: name ?? null,
+              icon: icon ?? null,
+              branch: branch ?? null,
+              environmentId: environmentId ?? null,
+              source: null,
+              registryCredentials: null,
+              templateServiceId: null,
+              variables: null,
+            },
+          },
+        });
+
+        return successResponse({ service: result.serviceCreate });
+      } catch (error) {
+        return errorResponse(toRailwayErrorMessage(error));
+      }
+    },
+  );
+
+  server.registerTool(
+    'railway_service_delete',
+    {
+      title: 'Delete Service',
+      description: 'Delete a service from a project.',
+      inputSchema: {
+        serviceId: serviceIdSchema,
+        environmentId: z
+          .string()
+          .trim()
+          .describe('Optional environment ID to delete service from specific environment only.')
+          .optional(),
+      },
+      outputSchema: {
+        deleted: z.boolean(),
+      },
+    },
+    async ({ serviceId, environmentId }) => {
+      try {
+        const railway = getRailway();
+        const result = await railway.services.delete({
+          variables: {
+            id: serviceId,
+            environmentId: environmentId ?? null,
+          },
+        });
+
+        return successResponse({ deleted: result.serviceDelete });
+      } catch (error) {
+        return errorResponse(toRailwayErrorMessage(error));
+      }
+    },
+  );
 };
