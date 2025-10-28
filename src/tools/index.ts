@@ -5,6 +5,7 @@ import { getEnvToken, getRailway, toRailwayErrorMessage } from '../client.js';
 import { registerDeploymentTools } from './deployments.js';
 import { registerProjectTools } from './projects.js';
 import { registerServiceTools } from './services.js';
+import { registerTemplateTools } from './templates.js';
 import { registerVariableTools } from './variables.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -14,6 +15,7 @@ export const registerTools = (server: McpServer): void => {
   registerServiceTools(server);
   registerDeploymentTools(server);
   registerVariableTools(server);
+  registerTemplateTools(server);
 };
 
 const registerVerifyConnectionTool = (server: McpServer): void => {
