@@ -9,6 +9,7 @@ import { registerProjectTools } from './projects.js';
 import { registerServiceTools } from './services.js';
 import { registerTemplateTools } from './templates.js';
 import { registerVariableTools } from './variables.js';
+import { registerVolumeTools } from './volumes.js';
 import { registerWorkflowTools } from './workflows.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -21,6 +22,7 @@ export const registerTools = (server: McpServer): void => {
   registerVariableTools(server);
   registerTemplateTools(server);
   registerDomainTools(server);
+  registerVolumeTools(server);
   registerWorkflowTools(server);
 };
 
