@@ -275,4 +275,205 @@ export const registerDeploymentTools = (server: McpServer): void => {
       }
     },
   );
+
+  server.registerTool(
+    'railway_deployment_stop',
+    {
+      title: 'Stop Deployment',
+      description: 'Stop a running deployment.',
+      inputSchema: {
+        deploymentId: deploymentIdSchema,
+      },
+      outputSchema: {
+        deployment: z
+          .object({
+            id: z.string(),
+            status: z.string(),
+          })
+          .passthrough(),
+      },
+    },
+    async ({ deploymentId }) => {
+      try {
+        const railway = getRailway();
+        const result = await railway.deployments.stop({
+          variables: {
+            id: deploymentId,
+          },
+        });
+
+        return successResponse({ deployment: result.deploymentStop });
+      } catch (error) {
+        return errorResponse(toRailwayErrorMessage(error));
+      }
+    },
+  );
+
+  server.registerTool(
+    'railway_deployment_restart',
+    {
+      title: 'Restart Deployment',
+      description: 'Restart a deployment.',
+      inputSchema: {
+        deploymentId: deploymentIdSchema,
+      },
+      outputSchema: {
+        deployment: z
+          .object({
+            id: z.string(),
+            status: z.string(),
+          })
+          .passthrough(),
+      },
+    },
+    async ({ deploymentId }) => {
+      try {
+        const railway = getRailway();
+        const result = await railway.deployments.restart({
+          variables: {
+            id: deploymentId,
+          },
+        });
+
+        return successResponse({ deployment: result.deploymentRestart });
+      } catch (error) {
+        return errorResponse(toRailwayErrorMessage(error));
+      }
+    },
+  );
+
+  server.registerTool(
+    'railway_deployment_cancel',
+    {
+      title: 'Cancel Deployment',
+      description: 'Cancel a pending or in-progress deployment.',
+      inputSchema: {
+        deploymentId: deploymentIdSchema,
+      },
+      outputSchema: {
+        deployment: z
+          .object({
+            id: z.string(),
+            status: z.string(),
+          })
+          .passthrough(),
+      },
+    },
+    async ({ deploymentId }) => {
+      try {
+        const railway = getRailway();
+        const result = await railway.deployments.cancel({
+          variables: {
+            id: deploymentId,
+          },
+        });
+
+        return successResponse({ deployment: result.deploymentCancel });
+      } catch (error) {
+        return errorResponse(toRailwayErrorMessage(error));
+      }
+    },
+  );
+
+  server.registerTool(
+    'railway_deployment_rollback',
+    {
+      title: 'Rollback Deployment',
+      description: 'Rollback to a previous deployment.',
+      inputSchema: {
+        deploymentId: deploymentIdSchema,
+      },
+      outputSchema: {
+        deployment: z
+          .object({
+            id: z.string(),
+            status: z.string(),
+          })
+          .passthrough(),
+      },
+    },
+    async ({ deploymentId }) => {
+      try {
+        const railway = getRailway();
+        const result = await railway.deployments.rollback({
+          variables: {
+            id: deploymentId,
+          },
+        });
+
+        return successResponse({ deployment: result.deploymentRollback });
+      } catch (error) {
+        return errorResponse(toRailwayErrorMessage(error));
+      }
+    },
+  );
+
+  server.registerTool(
+    'railway_deployment_events',
+    {
+      title: 'Get Deployment Events',
+      description: 'Fetch events for a deployment.',
+      inputSchema: {
+        deploymentId: deploymentIdSchema,
+        first: z
+          .number()
+          .int()
+          .positive()
+          .max(100)
+          .describe('Maximum number of items to return.')
+          .optional(),
+        last: z
+          .number()
+          .int()
+          .positive()
+          .max(100)
+          .describe('Fetch items in reverse order (use with before).')
+          .optional(),
+        after: z.string().describe('Cursor for the next page.').optional(),
+        before: z.string().describe('Cursor for the previous page.').optional(),
+      },
+      outputSchema: {
+        events: z.object({
+          edges: z.array(
+            z.object({
+              cursor: z.string(),
+              node: z.object({
+                id: z.string(),
+                action: z.string(),
+                createdAt: z.string(),
+              }),
+            }),
+          ),
+          pageInfo: z.object({
+            hasNextPage: z.boolean(),
+            hasPreviousPage: z.boolean(),
+            startCursor: z.string().nullable(),
+            endCursor: z.string().nullable(),
+          }),
+        }),
+      },
+    },
+    async ({ deploymentId, first, after, last, before }) => {
+      if (first !== undefined && last !== undefined) {
+        return errorResponse('Provide either first or last, not both.');
+      }
+
+      try {
+        const railway = getRailway();
+        const data = await railway.deployments.events({
+          variables: {
+            id: deploymentId,
+            first: first ?? null,
+            after: after ?? null,
+            last: last ?? null,
+            before: before ?? null,
+          },
+        });
+
+        return successResponse(data);
+      } catch (error) {
+        return errorResponse(toRailwayErrorMessage(error));
+      }
+    },
+  );
 };
