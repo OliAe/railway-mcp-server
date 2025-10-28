@@ -1,12 +1,13 @@
 import {
   GraphQLRequestError,
   MissingTokenError,
-  RailwayClient,
+  createRailway,
   requireTokenFromEnv,
   type EnvToken,
+  type Railway,
 } from 'railway-sdk';
 
-let cachedClient: RailwayClient | null = null;
+let cachedRailway: Railway | null = null;
 let cachedEnvToken: EnvToken | null = null;
 
 export const getEnvToken = (): EnvToken => {
@@ -18,19 +19,24 @@ export const getEnvToken = (): EnvToken => {
   return cachedEnvToken;
 };
 
-export const getRailwayClient = (): RailwayClient => {
-  if (cachedClient) {
-    return cachedClient;
+export const getRailway = (): Railway => {
+  if (cachedRailway) {
+    return cachedRailway;
   }
 
   const envToken = getEnvToken();
 
-  cachedClient = new RailwayClient({
+  cachedRailway = createRailway({
     token: envToken.token,
     tokenType: envToken.type,
   });
 
-  return cachedClient;
+  return cachedRailway;
+};
+
+export const getRailwayClient = (): Railway['client'] => {
+  const railway = getRailway();
+  return railway.client;
 };
 
 export const toRailwayErrorMessage = (error: unknown): string => {

@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
-import { getEnvToken, getRailwayClient, toRailwayErrorMessage } from '../client.js';
+import { getEnvToken, getRailway, toRailwayErrorMessage } from '../client.js';
 import { registerDeploymentTools } from './deployments.js';
 import { registerProjectTools } from './projects.js';
 import { registerServiceTools } from './services.js';
@@ -30,7 +30,7 @@ const registerVerifyConnectionTool = (server: McpServer): void => {
     async () => {
       try {
         const envToken = getEnvToken();
-        getRailwayClient();
+        getRailway();
 
         const message = `Successfully initialised Railway client using ${envToken.type} token from ${envToken.envVar}.`;
 

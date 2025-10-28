@@ -1,11 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import {
-  variableUpsert,
-  variablesForServiceDeployment as fetchVariablesForDeployment,
-} from 'railway-sdk';
-
-import { getRailwayClient, toRailwayErrorMessage } from '../client.js';
+import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
 const projectIdSchema = z.string().min(1, 'Project ID is required').describe('The project ID.');
@@ -34,8 +29,8 @@ export const registerVariableTools = (server: McpServer): void => {
     },
     async ({ projectId, environmentId, serviceId }) => {
       try {
-        const client = getRailwayClient();
-        const result = await fetchVariablesForDeployment(client, {
+        const railway = getRailway();
+        const result = await railway.variables.serviceDeployment.variables({
           variables: {
             projectId,
             environmentId,
@@ -74,8 +69,8 @@ export const registerVariableTools = (server: McpServer): void => {
     },
     async ({ projectId, environmentId, name, value, serviceId, skipDeploys }) => {
       try {
-        const client = getRailwayClient();
-        const result = await variableUpsert(client, {
+        const railway = getRailway();
+        const result = await railway.variables.upsert({
           variables: {
             input: {
               projectId,

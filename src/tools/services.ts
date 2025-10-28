@@ -1,8 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { service as fetchService, serviceInstanceDeployV2, serviceUpdate } from 'railway-sdk';
-
-import { getRailwayClient, toRailwayErrorMessage } from '../client.js';
+import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
 const serviceIdSchema = z
@@ -14,9 +12,6 @@ const environmentIdSchema = z
   .string()
   .min(1, 'Environment ID is required')
   .describe('The ID of the environment.');
-
-type ServiceQueryResult = Awaited<ReturnType<typeof fetchService>>;
-type ServiceUpdateResult = Awaited<ReturnType<typeof serviceUpdate>>;
 
 export const registerServiceTools = (server: McpServer): void => {
   server.registerTool(
@@ -39,8 +34,8 @@ export const registerServiceTools = (server: McpServer): void => {
     },
     async ({ serviceId }) => {
       try {
-        const client = getRailwayClient();
-        const data: ServiceQueryResult = await fetchService(client, {
+        const railway = getRailway();
+        const data = await railway.services.get({
           variables: {
             id: serviceId,
           },
@@ -79,8 +74,8 @@ export const registerServiceTools = (server: McpServer): void => {
       }
 
       try {
-        const client = getRailwayClient();
-        const result: ServiceUpdateResult = await serviceUpdate(client, {
+        const railway = getRailway();
+        const result = await railway.services.update({
           variables: {
             id: serviceId,
             input: {
@@ -114,8 +109,8 @@ export const registerServiceTools = (server: McpServer): void => {
     },
     async ({ serviceId, environmentId, commitSha }) => {
       try {
-        const client = getRailwayClient();
-        const result = await serviceInstanceDeployV2(client, {
+        const railway = getRailway();
+        const result = await railway.services.instances.deployV2({
           variables: {
             serviceId,
             environmentId,

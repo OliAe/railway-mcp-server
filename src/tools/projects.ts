@@ -1,22 +1,12 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import {
-  project as fetchProject,
-  projects as fetchProjects,
-  projectScheduleDelete,
-} from 'railway-sdk';
-
-import { getRailwayClient, toRailwayErrorMessage } from '../client.js';
+import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
 const projectIdSchema = z
   .string()
   .min(1, 'Project ID is required')
   .describe('The ID of the project.');
-
-type ProjectQueryResult = Awaited<ReturnType<typeof fetchProject>>;
-type ProjectsQueryResult = Awaited<ReturnType<typeof fetchProjects>>;
-type ProjectScheduleDeleteResult = Awaited<ReturnType<typeof projectScheduleDelete>>;
 
 export const registerProjectTools = (server: McpServer): void => {
   server.registerTool(
@@ -77,9 +67,8 @@ export const registerProjectTools = (server: McpServer): void => {
       }
 
       try {
-        const client = getRailwayClient();
-
-        const data: ProjectsQueryResult = await fetchProjects(client, {
+        const railway = getRailway();
+        const data = await railway.projects.list({
           variables: {
             userId: userId ?? null,
             workspaceId: workspaceId ?? null,
@@ -117,8 +106,8 @@ export const registerProjectTools = (server: McpServer): void => {
     },
     async ({ projectId }) => {
       try {
-        const client = getRailwayClient();
-        const data: ProjectQueryResult = await fetchProject(client, {
+        const railway = getRailway();
+        const data = await railway.projects.get({
           variables: {
             id: projectId,
           },
@@ -145,8 +134,8 @@ export const registerProjectTools = (server: McpServer): void => {
     },
     async ({ projectId }) => {
       try {
-        const client = getRailwayClient();
-        const result: ProjectScheduleDeleteResult = await projectScheduleDelete(client, {
+        const railway = getRailway();
+        const result = await railway.projects.schedules.delete({
           variables: {
             id: projectId,
           },

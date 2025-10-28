@@ -1,13 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import {
-  deployment as fetchDeployment,
-  deploymentLogs as fetchDeploymentLogs,
-  deploymentRedeploy,
-  deployments as fetchDeployments,
-} from 'railway-sdk';
-
-import { getRailwayClient, toRailwayErrorMessage } from '../client.js';
+import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
 const deploymentStatusValues = [
@@ -27,11 +20,6 @@ const deploymentStatusValues = [
 ] as const;
 
 const deploymentStatusEnum = z.enum(deploymentStatusValues);
-
-type DeploymentResult = Awaited<ReturnType<typeof fetchDeployment>>;
-type DeploymentsResult = Awaited<ReturnType<typeof fetchDeployments>>;
-type DeploymentLogsResult = Awaited<ReturnType<typeof fetchDeploymentLogs>>;
-type DeploymentRedeployResult = Awaited<ReturnType<typeof deploymentRedeploy>>;
 
 const deploymentIdSchema = z
   .string()
@@ -132,9 +120,8 @@ export const registerDeploymentTools = (server: McpServer): void => {
       }
 
       try {
-        const client = getRailwayClient();
-
-        const data: DeploymentsResult = await fetchDeployments(client, {
+        const railway = getRailway();
+        const data = await railway.deployments.list({
           variables: {
             input: {
               projectId,
@@ -185,8 +172,8 @@ export const registerDeploymentTools = (server: McpServer): void => {
     },
     async ({ deploymentId }) => {
       try {
-        const client = getRailwayClient();
-        const data: DeploymentResult = await fetchDeployment(client, {
+        const railway = getRailway();
+        const data = await railway.deployments.get({
           variables: {
             id: deploymentId,
           },
@@ -229,8 +216,8 @@ export const registerDeploymentTools = (server: McpServer): void => {
     },
     async ({ deploymentId, limit, filter, startDate, endDate }) => {
       try {
-        const client = getRailwayClient();
-        const result: DeploymentLogsResult = await fetchDeploymentLogs(client, {
+        const railway = getRailway();
+        const result = await railway.deployments.logs({
           variables: {
             deploymentId,
             limit: limit ?? null,
@@ -274,8 +261,8 @@ export const registerDeploymentTools = (server: McpServer): void => {
     },
     async ({ deploymentId, usePreviousImageTag }) => {
       try {
-        const client = getRailwayClient();
-        const result: DeploymentRedeployResult = await deploymentRedeploy(client, {
+        const railway = getRailway();
+        const result = await railway.deployments.redeploy({
           variables: {
             id: deploymentId,
             usePreviousImageTag: usePreviousImageTag ?? null,
