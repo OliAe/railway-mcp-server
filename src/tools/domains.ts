@@ -19,8 +19,6 @@ const projectIdSchema = z
   .min(1, 'Project ID is required')
   .describe('The ID of the project.');
 
-const domainIdSchema = z.string().min(1, 'Domain ID is required').describe('The ID of the domain.');
-
 export const registerDomainTools = (server: McpServer): void => {
   server.registerTool(
     'railway_domain_generate',
@@ -165,34 +163,6 @@ export const registerDomainTools = (server: McpServer): void => {
         });
 
         return successResponse({ domain: result.customDomainCreate });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
-      }
-    },
-  );
-
-  server.registerTool(
-    'railway_custom_domain_delete',
-    {
-      title: 'Delete Custom Domain',
-      description: 'Remove a custom domain from a service.',
-      inputSchema: {
-        domainId: domainIdSchema,
-      },
-      outputSchema: {
-        deleted: z.boolean(),
-      },
-    },
-    async ({ domainId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.domains.custom.delete({
-          variables: {
-            id: domainId,
-          },
-        });
-
-        return successResponse({ deleted: result.customDomainDelete });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }

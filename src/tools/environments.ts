@@ -175,34 +175,6 @@ export const registerEnvironmentTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway_environment_delete',
-    {
-      title: 'Delete Environment',
-      description: 'Delete an environment from a project.',
-      inputSchema: {
-        environmentId: environmentIdSchema,
-      },
-      outputSchema: {
-        deleted: z.boolean(),
-      },
-    },
-    async ({ environmentId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.environments.delete({
-          variables: {
-            id: environmentId,
-          },
-        });
-
-        return successResponse({ deleted: result.environmentDelete });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
-      }
-    },
-  );
-
-  server.registerTool(
     'railway_environment_rename',
     {
       title: 'Rename Environment',

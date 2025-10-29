@@ -91,42 +91,6 @@ export const registerVariableTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway_variable_delete',
-    {
-      title: 'Delete Variable',
-      description: 'Delete a variable from a project or service.',
-      inputSchema: {
-        projectId: projectIdSchema,
-        environmentId: environmentIdSchema,
-        name: z.string().min(1, 'Variable name is required').describe('Name of the variable.'),
-        serviceId: serviceIdSchema.optional(),
-      },
-      outputSchema: {
-        deleted: z.boolean(),
-      },
-    },
-    async ({ projectId, environmentId, name, serviceId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.variables.delete({
-          variables: {
-            input: {
-              projectId,
-              environmentId,
-              name,
-              serviceId: serviceId ?? null,
-            },
-          },
-        });
-
-        return successResponse({ deleted: result.variableDelete });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
-      }
-    },
-  );
-
-  server.registerTool(
     'railway_variables_collection_upsert',
     {
       title: 'Bulk Upsert Variables',

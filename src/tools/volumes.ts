@@ -9,8 +9,6 @@ const projectIdSchema = z
   .min(1, 'Project ID is required')
   .describe('The ID of the project.');
 
-const volumeIdSchema = z.string().min(1, 'Volume ID is required').describe('The ID of the volume.');
-
 const volumeInstanceIdSchema = z
   .string()
   .min(1, 'Volume instance ID is required')
@@ -61,34 +59,6 @@ export const registerVolumeTools = (server: McpServer): void => {
         });
 
         return successResponse({ volume: result.volumeCreate });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
-      }
-    },
-  );
-
-  server.registerTool(
-    'railway_volume_delete',
-    {
-      title: 'Delete Volume',
-      description: 'Delete a volume and all its instances.',
-      inputSchema: {
-        volumeId: volumeIdSchema,
-      },
-      outputSchema: {
-        deleted: z.boolean(),
-      },
-    },
-    async ({ volumeId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.volumes.delete({
-          variables: {
-            volumeId,
-          },
-        });
-
-        return successResponse({ deleted: result.volumeDelete });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
@@ -191,39 +161,6 @@ export const registerVolumeTools = (server: McpServer): void => {
         });
 
         return successResponse({ workflowId: result.volumeInstanceBackupRestore.workflowId });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
-      }
-    },
-  );
-
-  server.registerTool(
-    'railway_volume_instance_backup_delete',
-    {
-      title: 'Delete Volume Backup',
-      description: 'Delete a volume backup.',
-      inputSchema: {
-        volumeInstanceId: volumeInstanceIdSchema,
-        backupId: z
-          .string()
-          .min(1, 'Backup ID is required')
-          .describe('The ID of the backup to delete.'),
-      },
-      outputSchema: {
-        workflowId: z.string().nullable(),
-      },
-    },
-    async ({ volumeInstanceId, backupId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.volumes.instance.backups.delete({
-          variables: {
-            volumeInstanceId,
-            volumeInstanceBackupId: backupId,
-          },
-        });
-
-        return successResponse({ workflowId: result.volumeInstanceBackupDelete.workflowId });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }

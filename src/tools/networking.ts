@@ -112,34 +112,6 @@ export const registerNetworkingTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway_private_network_delete_for_environment',
-    {
-      title: 'Delete Private Network for Environment',
-      description: 'Delete all private networks for an environment.',
-      inputSchema: {
-        environmentId: environmentIdSchema,
-      },
-      outputSchema: {
-        deleted: z.boolean(),
-      },
-    },
-    async ({ environmentId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.networking.privateNetworks.deleteForEnvironment({
-          variables: {
-            environmentId,
-          },
-        });
-
-        return successResponse({ deleted: result.privateNetworksForEnvironmentDelete });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
-      }
-    },
-  );
-
-  server.registerTool(
     'railway_tcp_proxies_list',
     {
       title: 'List TCP Proxies',
@@ -175,34 +147,6 @@ export const registerNetworkingTools = (server: McpServer): void => {
         });
 
         return successResponse({ proxies: result.tcpProxies });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
-      }
-    },
-  );
-
-  server.registerTool(
-    'railway_tcp_proxy_delete',
-    {
-      title: 'Delete TCP Proxy',
-      description: 'Delete a TCP proxy.',
-      inputSchema: {
-        proxyId: z.string().min(1, 'Proxy ID is required').describe('The ID of the TCP proxy.'),
-      },
-      outputSchema: {
-        deleted: z.boolean(),
-      },
-    },
-    async ({ proxyId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.networking.tcpProxies.delete({
-          variables: {
-            id: proxyId,
-          },
-        });
-
-        return successResponse({ deleted: result.tcpProxyDelete });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }

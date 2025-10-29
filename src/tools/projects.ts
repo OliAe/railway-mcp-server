@@ -189,32 +189,4 @@ export const registerProjectTools = (server: McpServer): void => {
       }
     },
   );
-
-  server.registerTool(
-    'railway_project_schedule_delete',
-    {
-      title: 'Schedule Project Deletion',
-      description: 'Schedules a project for deletion, applying the standard 48 hour grace period.',
-      inputSchema: {
-        projectId: projectIdSchema,
-      },
-      outputSchema: {
-        scheduled: z.boolean(),
-      },
-    },
-    async ({ projectId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.projects.schedules.delete({
-          variables: {
-            id: projectId,
-          },
-        });
-
-        return successResponse({ scheduled: result.projectScheduleDelete });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
-      }
-    },
-  );
 };

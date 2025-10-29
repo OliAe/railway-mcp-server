@@ -249,38 +249,4 @@ export const registerServiceTools = (server: McpServer): void => {
       }
     },
   );
-
-  server.registerTool(
-    'railway_service_delete',
-    {
-      title: 'Delete Service',
-      description: 'Delete a service from a project.',
-      inputSchema: {
-        serviceId: serviceIdSchema,
-        environmentId: z
-          .string()
-          .trim()
-          .describe('Optional environment ID to delete service from specific environment only.')
-          .optional(),
-      },
-      outputSchema: {
-        deleted: z.boolean(),
-      },
-    },
-    async ({ serviceId, environmentId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.services.delete({
-          variables: {
-            id: serviceId,
-            environmentId: environmentId ?? null,
-          },
-        });
-
-        return successResponse({ deleted: result.serviceDelete });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
-      }
-    },
-  );
 };
