@@ -5,7 +5,7 @@ import {
   requireTokenFromEnv,
   type EnvToken,
   type Railway,
-} from 'railway-sdk';
+} from '@crisog/railway-sdk';
 
 let cachedRailway: Railway | null = null;
 let cachedEnvToken: EnvToken | null = null;

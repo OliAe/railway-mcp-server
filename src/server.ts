@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { GraphQLRequestError, MissingTokenError } from 'railway-sdk';
+import { GraphQLRequestError, MissingTokenError } from '@crisog/railway-sdk';
 
 import { registerTools } from './tools/index.js';
 
