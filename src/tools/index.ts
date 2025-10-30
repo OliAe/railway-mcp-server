@@ -46,7 +46,8 @@ const registerVerifyConnectionTool = (server: McpServer): void => {
     async () => {
       try {
         const envToken = getEnvToken();
-        getRailway();
+        const railway = getRailway();
+        await railway.account.me();
 
         const message = `Successfully initialised Railway client using ${envToken.type} token from ${envToken.envVar}.`;
 
