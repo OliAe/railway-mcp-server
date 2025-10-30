@@ -20,8 +20,6 @@ or install it globally to make the CLI available everywhere:
 npm install --global @crisog/railway-mcp-server
 ```
 
-> **Node.js 20.19+ is required** because the build and runtime depend on tsdown and modern ESM features.
-
 ## Building from source
 
 Install dependencies and generate the compiled output with:
@@ -137,14 +135,3 @@ This MCP server provides **47 tools** for managing Railway infrastructure, organ
 ### Workflows
 
 - `railway_workflow_status` - Check status of asynchronous Railway workflows
-
-## Publishing
-
-Before publishing, run:
-
-```bash
-bun run build
-npm pack
-```
-
-This ensures the `dist/` directory is fresh and the packaged contents look correct.
