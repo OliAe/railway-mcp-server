@@ -4,7 +4,7 @@
     "": {
       "name": "@crisog/railway-mcp-server",
       "dependencies": {
-        "@crisog/railway-sdk": "^0.0.1",
+        "@crisog/railway-sdk": "^0.0.2",
         "@modelcontextprotocol/sdk": "^1.20.1",
         "zod": "^3.25.76",
       },
@@ -79,7 +79,7 @@
 
     "@commitlint/types": ["@commitlint/types@19.8.1", "", { "dependencies": { "@types/conventional-commits-parser": "^5.0.0", "chalk": "^5.3.0" } }, "sha512-/yCrWGCoA1SVKOks25EGadP9Pnj0oAIHGpl2wH2M2Y46dPM2ueb8wyCVOD7O3WCTkaJ0IkKvzhl1JY7+uCT2Dw=="],
 
-    "@crisog/railway-sdk": ["@crisog/railway-sdk@0.0.1", "", { "peerDependencies": { "typescript": "^5.9.3" } }, "sha512-Pk0gSqm9vqsY1bK4NA+dHiTYRr+V07GV2FoA06uJdv40C5H7WAWEYCecajlFAqe2lWVHJsJ365qcG0xPjUU1DA=="],
+    "@crisog/railway-sdk": ["@crisog/railway-sdk@0.0.2", "", { "peerDependencies": { "typescript": "^5.9.3" } }, "sha512-G85tpNEZjp6EBpih3EKn0T8A7XwMa6+Cs6wh4ohLYed6wbhVVe4KRHB1oA7XvNweqHgocgw9ZruQnblseHwM1A=="],
 
     "@emnapi/core": ["@emnapi/core@1.6.0", "", { "dependencies": { "@emnapi/wasi-threads": "1.1.0", "tslib": "^2.4.0" } }, "sha512-zq/ay+9fNIJJtJiZxdTnXS20PllcYMX3OE23ESc4HK/bdYu3cOWYVhsOhVnXALfU/uqJIxn5NBPd9z4v+SfoSg=="],
 
@@ -1092,6 +1092,8 @@
     "execa/get-stream": ["get-stream@8.0.1", "", {}, "sha512-VaUJspBffn/LMCJVoMvSAdmscJyS1auj5Zulnn5UoYcY531UWmdwhRWkcGKnGU93m5HSXP9LP2usOryrBtQowA=="],
 
     "fast-glob/glob-parent": ["glob-parent@5.1.2", "", { "dependencies": { "is-glob": "^4.0.1" } }, "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="],
+
+    "fdir/picomatch": ["picomatch@4.0.3", "", {}, "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q=="],
 
     "git-raw-commits/split2": ["split2@4.2.0", "", {}, "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg=="],
 
