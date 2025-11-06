@@ -8,11 +8,7 @@ An unofficial Model Context Protocol (MCP) server for exposing Railway resources
 
 ## Quick Start
 
-### Add to Cursor
-
-<a href="cursor://anysphere.cursor-deeplink/mcp/install?name=railway-mcp-server&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBjcmlzb2cvcmFpbHdheS1tY3Atc2VydmVyIl19">
-  <img src="https://img.shields.io/badge/Add_to-Cursor-black?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiAyMkwyMiAxMkwxMiAyWiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+" alt="Add to Cursor">
-</a>
+[![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=railway-mcp-server&config=eyJjb21tYW5kIjoibnB4IC15IEBjcmlzb2cvcmFpbHdheS1tY3Atc2VydmVyIn0%3D)
 
 This will add the following configuration to your Cursor settings:
 
