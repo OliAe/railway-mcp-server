@@ -6,46 +6,26 @@
 
 An unofficial Model Context Protocol (MCP) server for exposing Railway resources and automation tools to MCP-compatible clients.
 
-## Installation
+## Quick Start
 
-Install the package from npm:
+### Add to Cursor
 
-```bash
-npm install --save-dev @crisog/railway-mcp-server
+<a href="cursor://anysphere.cursor-deeplink/mcp/install?name=railway-mcp-server&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBjcmlzb2cvcmFpbHdheS1tY3Atc2VydmVyIl19">
+  <img src="https://img.shields.io/badge/Add_to-Cursor-black?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiAyMkwyMiAxMkwxMiAyWiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+" alt="Add to Cursor">
+</a>
+
+This will add the following configuration to your Cursor settings:
+
+```json
+{
+  "mcpServers": {
+    "railway-mcp-server": {
+      "command": "npx",
+      "args": ["-y", "@crisog/railway-mcp-server"]
+    }
+  }
+}
 ```
-
-or install it globally to make the CLI available everywhere:
-
-```bash
-npm install --global @crisog/railway-mcp-server
-```
-
-## Building from source
-
-Install dependencies and generate the compiled output with:
-
-```bash
-bun install
-bun run build
-```
-
-The compiled JavaScript, type declarations, and CLI entry point are emitted to `dist/`.
-
-For iterative development you can use watch mode:
-
-```bash
-bun run dev
-```
-
-## Usage
-
-Set your Railway token in the environment (`RAILWAY_TOKEN` or the variable required by `@crisog/railway-sdk`) and start the server:
-
-```bash
-railway-mcp-server
-```
-
-The CLI will start the MCP server over stdio so your MCP client can communicate with Railway.
 
 ## Available Tools
 
