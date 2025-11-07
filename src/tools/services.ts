@@ -215,14 +215,14 @@ export const registerServiceTools = (server: McpServer): void => {
       description: 'Create a new service in a project.',
       inputSchema: {
         projectId: z.string().min(1, 'Project ID is required').describe('The ID of the project.'),
-        name: z.string().trim().min(1).describe('Name for the service.').optional(),
-        icon: z.string().trim().describe('Icon URL for the service.').optional(),
-        branch: z.string().trim().describe('Git branch for the service.').optional(),
         environmentId: z
           .string()
           .trim()
-          .describe('Environment ID where the service will be created.')
-          .optional(),
+          .min(1, 'Environment ID is required')
+          .describe('Environment ID where the service will be created.'),
+        name: z.string().trim().min(1).describe('Name for the service.').optional(),
+        icon: z.string().trim().describe('Icon URL for the service.').optional(),
+        branch: z.string().trim().describe('Git branch for the service.').optional(),
       },
       outputSchema: {
         service: z.object({
@@ -240,17 +240,17 @@ export const registerServiceTools = (server: McpServer): void => {
         }),
       },
     },
-    async ({ projectId, name, icon, branch, environmentId }) => {
+    async ({ projectId, environmentId, name, icon, branch }) => {
       try {
         const railway = getRailway();
         const result = await railway.services.create({
           variables: {
             input: {
               projectId,
+              environmentId,
               name: name ?? null,
               icon: icon ?? null,
               branch: branch ?? null,
-              environmentId: environmentId ?? null,
               source: null,
               registryCredentials: null,
               templateServiceId: null,
