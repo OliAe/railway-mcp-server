@@ -40,10 +40,12 @@ export const registerServiceTools = (server: McpServer): void => {
       },
       outputSchema: {
         services: z.object({
+          __typename: z.string().optional(),
           edges: z.array(
             z.object({
               cursor: z.string(),
               node: z.object({
+                __typename: z.string().optional(),
                 id: z.string(),
                 name: z.string(),
                 icon: z.string().nullable(),
@@ -51,6 +53,8 @@ export const registerServiceTools = (server: McpServer): void => {
                 updatedAt: z.string(),
                 deletedAt: z.string().nullable(),
                 projectId: z.string(),
+                templateServiceId: z.string().nullable(),
+                templateThreadSlug: z.string().nullable(),
               }),
             }),
           ),
@@ -96,13 +100,19 @@ export const registerServiceTools = (server: McpServer): void => {
         serviceId: serviceIdSchema,
       },
       outputSchema: {
-        service: z
-          .object({
-            id: z.string(),
-            name: z.string(),
-            projectId: z.string(),
-          })
-          .passthrough(),
+        service: z.object({
+          __typename: z.string().optional(),
+          id: z.string(),
+          name: z.string(),
+          projectId: z.string(),
+          icon: z.string().nullable(),
+          createdAt: z.string(),
+          updatedAt: z.string(),
+          deletedAt: z.string().nullable(),
+          templateServiceId: z.string().nullable(),
+          templateThreadSlug: z.string().nullable(),
+          featureFlags: z.array(z.string()),
+        }),
       },
     },
     async ({ serviceId }) => {

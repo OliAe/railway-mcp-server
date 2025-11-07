@@ -18,6 +18,7 @@ export const registerIntegrationTools = (server: McpServer): void => {
       outputSchema: {
         repos: z.array(
           z.object({
+            __typename: z.string().optional(),
             id: z.number(),
             name: z.string(),
             fullName: z.string(),
@@ -59,8 +60,10 @@ export const registerIntegrationTools = (server: McpServer): void => {
         branches: z.array(
           z.object({
             name: z.string(),
+            __typename: z.string().optional(),
           }),
         ),
+        __typename: z.string().optional(),
       },
     },
     async ({ owner, repo }) => {

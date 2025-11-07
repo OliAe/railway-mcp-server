@@ -47,26 +47,7 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       },
       outputSchema: {
         environments: z.object({
-          edges: z.array(
-            z.object({
-              cursor: z.string(),
-              node: z.object({
-                id: z.string(),
-                name: z.string(),
-                projectId: z.string(),
-                isEphemeral: z.boolean(),
-                createdAt: z.string(),
-                updatedAt: z.string(),
-                deletedAt: z.string().nullable(),
-              }),
-            }),
-          ),
-          pageInfo: z.object({
-            hasNextPage: z.boolean(),
-            hasPreviousPage: z.boolean(),
-            startCursor: z.string().nullable(),
-            endCursor: z.string().nullable(),
-          }),
+          __typename: z.string().optional(),
         }),
       },
     },

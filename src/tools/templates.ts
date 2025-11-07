@@ -53,7 +53,9 @@ export const registerTemplateTools = (server: McpServer): void => {
         recommended: z.boolean().describe('Only include recommended templates.').optional(),
       },
       outputSchema: {
-        templates: z.unknown(),
+        templates: z.object({
+          __typename: z.string().optional(),
+        }),
       },
     },
     async ({ first, last, after, before, recommended }) => {

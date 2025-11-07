@@ -37,6 +37,7 @@ export const registerProjectTools = (server: McpServer): void => {
       },
       outputSchema: {
         projects: z.object({
+          __typename: z.string().optional(),
           edges: z.array(
             z.object({
               cursor: z.string(),

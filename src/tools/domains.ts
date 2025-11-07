@@ -82,20 +82,7 @@ export const registerDomainTools = (server: McpServer): void => {
       },
       outputSchema: {
         domains: z.object({
-          serviceDomains: z.array(
-            z.object({
-              id: z.string(),
-              domain: z.string(),
-              targetPort: z.number().int().nullable(),
-            }),
-          ),
-          customDomains: z.array(
-            z.object({
-              id: z.string(),
-              domain: z.string(),
-              targetPort: z.number().int().nullable(),
-            }),
-          ),
+          __typename: z.string().optional(),
         }),
       },
     },
@@ -180,6 +167,7 @@ export const registerDomainTools = (server: McpServer): void => {
       outputSchema: {
         available: z.boolean(),
         message: z.string(),
+        __typename: z.string().optional(),
       },
     },
     async ({ domain }) => {

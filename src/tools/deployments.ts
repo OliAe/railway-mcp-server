@@ -76,10 +76,12 @@ export const registerDeploymentTools = (server: McpServer): void => {
       },
       outputSchema: {
         deployments: z.object({
+          __typename: z.string().optional(),
           edges: z.array(
             z.object({
               cursor: z.string(),
               node: z.object({
+                __typename: z.string().optional(),
                 id: z.string(),
                 status: z.string(),
                 createdAt: z.string(),
@@ -91,6 +93,13 @@ export const registerDeploymentTools = (server: McpServer): void => {
                 staticUrl: z.string().nullable(),
                 canRedeploy: z.boolean(),
                 canRollback: z.boolean(),
+                service: z
+                  .object({
+                    __typename: z.string().optional(),
+                    id: z.string(),
+                    name: z.string(),
+                  })
+                  .nullable(),
               }),
             }),
           ),
@@ -143,7 +152,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse(data);
+        return successResponse({ deployments: data.deployments });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
@@ -159,15 +168,24 @@ export const registerDeploymentTools = (server: McpServer): void => {
         deploymentId: deploymentIdSchema,
       },
       outputSchema: {
-        deployment: z
-          .object({
-            id: z.string(),
-            status: z.string(),
-            environmentId: z.string(),
-            projectId: z.string(),
-            serviceId: z.string().nullable(),
-          })
-          .passthrough(),
+        deployment: z.object({
+          __typename: z.string().optional(),
+          id: z.string(),
+          status: z.string(),
+          environmentId: z.string(),
+          projectId: z.string(),
+          serviceId: z.string().nullable(),
+          snapshotId: z.string().nullable(),
+          createdAt: z.string(),
+          updatedAt: z.string(),
+          canRedeploy: z.boolean(),
+          canRollback: z.boolean(),
+          deploymentStopped: z.boolean(),
+          staticUrl: z.string().nullable(),
+          url: z.string().nullable(),
+          suggestAddServiceDomain: z.boolean(),
+          meta: z.any().nullable(),
+        }),
       },
     },
     async ({ deploymentId }) => {
@@ -179,7 +197,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse(data);
+        return successResponse({ deployment: data.deployment });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }

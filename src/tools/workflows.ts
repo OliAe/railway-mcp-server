@@ -18,6 +18,7 @@ export const registerWorkflowTools = (server: McpServer): void => {
         workflow: z.object({
           status: z.string(),
           error: z.string().nullable(),
+          __typename: z.string().optional(),
         }),
       },
     },
@@ -32,12 +33,19 @@ export const registerWorkflowTools = (server: McpServer): void => {
           return errorResponse('Workflow not found.');
         }
 
-        return successResponse({
-          workflow: {
-            status: result.workflowStatus.status,
-            error: result.workflowStatus.error,
-          },
-        });
+        const workflow: {
+          status: string;
+          error: string | null;
+          __typename?: string;
+        } = {
+          status: result.workflowStatus.status,
+          error: result.workflowStatus.error ?? null,
+        };
+        if (result.workflowStatus.__typename) {
+          workflow.__typename = result.workflowStatus.__typename;
+        }
+
+        return successResponse({ workflow });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
