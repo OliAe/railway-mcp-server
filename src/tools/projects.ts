@@ -139,7 +139,7 @@ export const registerProjectTools = (server: McpServer): void => {
             includedUsageDollars: z.number(),
             projects: z.number(),
             project: z.object({
-              members: z.number(),
+              members: z.number().nullable(),
               services: z.number(),
               buckets: z.number(),
             }),
