@@ -39,14 +39,16 @@ export const registerNetworkingTools = (server: McpServer): void => {
       },
       outputSchema: {
         network: z.object({
+          __typename: z.string().optional(),
           publicId: z.string(),
           name: z.string(),
           environmentId: z.string(),
           projectId: z.string(),
           dnsName: z.string(),
-          networkId: z.number(),
+          networkId: z.any(),
           tags: z.array(z.string()),
           createdAt: z.string().nullable(),
+          deletedAt: z.string().nullable(),
         }),
       },
     },
@@ -82,12 +84,13 @@ export const registerNetworkingTools = (server: McpServer): void => {
       outputSchema: {
         networks: z.array(
           z.object({
+            __typename: z.string().optional(),
             publicId: z.string(),
             name: z.string(),
             environmentId: z.string(),
             projectId: z.string(),
             dnsName: z.string(),
-            networkId: z.number(),
+            networkId: z.any(),
             tags: z.array(z.string()),
             createdAt: z.string().nullable(),
             deletedAt: z.string().nullable(),

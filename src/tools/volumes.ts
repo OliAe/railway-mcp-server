@@ -26,16 +26,21 @@ export const registerVolumeTools = (server: McpServer): void => {
           .string()
           .min(1, 'Mount path is required')
           .describe('Path to mount the volume.'),
-        serviceId: z.string().trim().describe('Service ID to attach the volume to.').optional(),
         environmentId: z
           .string()
           .trim()
-          .describe('Environment ID to deploy the volume to.')
+          .min(1, 'Environment ID is required')
+          .describe('Environment ID to deploy the volume to.'),
+        serviceId: z
+          .string()
+          .trim()
+          .describe('Service ID to attach the volume to (optional, can be mounted later).')
           .optional(),
         region: z.string().trim().describe('Region to create the volume in.').optional(),
       },
       outputSchema: {
         volume: z.object({
+          __typename: z.string().optional(),
           id: z.string(),
           name: z.string(),
           projectId: z.string(),
@@ -43,7 +48,7 @@ export const registerVolumeTools = (server: McpServer): void => {
         }),
       },
     },
-    async ({ projectId, mountPath, serviceId, environmentId, region }) => {
+    async ({ projectId, mountPath, environmentId, serviceId, region }) => {
       try {
         const railway = getRailway();
         const result = await railway.volumes.create({
@@ -51,8 +56,8 @@ export const registerVolumeTools = (server: McpServer): void => {
             input: {
               projectId,
               mountPath,
+              environmentId,
               serviceId: serviceId ?? null,
-              environmentId: environmentId ?? null,
               region: region ?? null,
             },
           },

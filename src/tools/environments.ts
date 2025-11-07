@@ -112,6 +112,7 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       },
       outputSchema: {
         environment: z.object({
+          __typename: z.string().optional(),
           id: z.string(),
           name: z.string(),
           projectId: z.string(),
@@ -166,8 +167,15 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       },
       outputSchema: {
         environment: z.object({
+          __typename: z.string().optional(),
           id: z.string(),
           name: z.string(),
+          projectId: z.string(),
+          isEphemeral: z.boolean(),
+          createdAt: z.string(),
+          updatedAt: z.string(),
+          deletedAt: z.string().nullable(),
+          unmergedChangesCount: z.number().int().nullable(),
         }),
       },
     },
@@ -219,6 +227,7 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       outputSchema: {
         logs: z.array(
           z.object({
+            __typename: z.string().optional(),
             message: z.string(),
             severity: z.string().nullable(),
             timestamp: z.string(),

@@ -37,6 +37,7 @@ export const registerDomainTools = (server: McpServer): void => {
       },
       outputSchema: {
         domain: z.object({
+          __typename: z.string().optional(),
           id: z.string(),
           domain: z.string(),
           projectId: z.string().nullable(),
@@ -44,6 +45,7 @@ export const registerDomainTools = (server: McpServer): void => {
           environmentId: z.string(),
           suffix: z.string().nullable(),
           targetPort: z.number().int().nullable(),
+          edgeId: z.string().nullable(),
           createdAt: z.string().nullable(),
           updatedAt: z.string().nullable(),
           deletedAt: z.string().nullable(),
@@ -123,14 +125,17 @@ export const registerDomainTools = (server: McpServer): void => {
       },
       outputSchema: {
         domain: z.object({
+          __typename: z.string().optional(),
           id: z.string(),
           domain: z.string(),
           projectId: z.string().nullable(),
           serviceId: z.string(),
           environmentId: z.string(),
           targetPort: z.number().int().nullable(),
+          edgeId: z.string().nullable(),
           createdAt: z.string().nullable(),
           updatedAt: z.string().nullable(),
+          deletedAt: z.string().nullable(),
         }),
       },
     },

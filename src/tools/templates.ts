@@ -159,6 +159,7 @@ export const registerTemplateTools = (server: McpServer): void => {
       },
       outputSchema: {
         deployment: z.object({
+          __typename: z.string().optional(),
           projectId: z.string(),
           workflowId: z.string().nullable(),
         }),

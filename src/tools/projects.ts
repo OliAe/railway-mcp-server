@@ -120,6 +120,7 @@ export const registerProjectTools = (server: McpServer): void => {
       },
       outputSchema: {
         project: z.object({
+          __typename: z.string().optional(),
           id: z.string(),
           name: z.string(),
           description: z.string().nullable(),
@@ -129,6 +130,57 @@ export const registerProjectTools = (server: McpServer): void => {
           updatedAt: z.string(),
           baseEnvironmentId: z.string().nullable(),
           teamId: z.string().nullable(),
+          botPrEnvironments: z.boolean(),
+          deletedAt: z.string().nullable(),
+          expiredAt: z.string().nullable(),
+          isTempProject: z.boolean(),
+          subscriptionType: z.string(),
+          subscriptionPlanLimit: z.object({
+            includedUsageDollars: z.number(),
+            projects: z.number(),
+            project: z.object({
+              members: z.number(),
+              services: z.number(),
+              buckets: z.number(),
+            }),
+            volumes: z.object({
+              defaultSizeMB: z.number(),
+              maxSizeMB: z.number(),
+              maxPerProject: z.number(),
+              maxBackupsCount: z.number(),
+              maxBackupsUsagePercent: z.number(),
+            }),
+            containers: z.object({
+              cpu: z.number(),
+              cpuDescription: z.string(),
+              memoryBytes: z.number(),
+              memoryDescription: z.string(),
+              diskBytes: z.number(),
+              diskDescription: z.string(),
+              pidLimit: z.number(),
+            }),
+            builds: z.object({
+              concurrent: z.number(),
+              timeout: z.object({
+                soft: z.number(),
+                hard: z.number(),
+              }),
+              maxImageSizeBytes: z.number(),
+            }),
+            deploys: z.object({
+              replicas: z.number(),
+            }),
+            observability: z.object({
+              logRetentionDays: z.number(),
+            }),
+            networking: z.object({
+              customDomains: z.number(),
+              serviceDomains: z.number(),
+            }),
+            apiTokens: z.object({
+              pointsToConsume: z.number(),
+            }),
+          }),
         }),
       },
     },
@@ -150,6 +202,10 @@ export const registerProjectTools = (server: McpServer): void => {
             },
           },
         });
+
+        if (!result.projectCreate) {
+          return errorResponse('Failed to create project.');
+        }
 
         return successResponse({ project: result.projectCreate });
       } catch (error) {

@@ -265,16 +265,24 @@ export const registerDeploymentTools = (server: McpServer): void => {
           .describe('If true, reuse the previous image tag.'),
       },
       outputSchema: {
-        deployment: z
-          .object({
-            id: z.string(),
-            status: z.string(),
-            environmentId: z.string(),
-            projectId: z.string(),
-            serviceId: z.string().nullable(),
-            url: z.string().nullable(),
-          })
-          .passthrough(),
+        deployment: z.object({
+          __typename: z.string().optional(),
+          id: z.string(),
+          status: z.string(),
+          environmentId: z.string(),
+          projectId: z.string(),
+          serviceId: z.string().nullable(),
+          snapshotId: z.string().nullable(),
+          createdAt: z.string(),
+          updatedAt: z.string(),
+          canRedeploy: z.boolean(),
+          canRollback: z.boolean(),
+          deploymentStopped: z.boolean(),
+          staticUrl: z.string().nullable(),
+          url: z.string().nullable(),
+          suggestAddServiceDomain: z.boolean(),
+          meta: z.any().nullable(),
+        }),
       },
     },
     async ({ deploymentId, usePreviousImageTag }) => {
@@ -303,12 +311,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
         deploymentId: deploymentIdSchema,
       },
       outputSchema: {
-        deployment: z
-          .object({
-            id: z.string(),
-            status: z.string(),
-          })
-          .passthrough(),
+        success: z.boolean(),
       },
     },
     async ({ deploymentId }) => {
@@ -320,7 +323,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse({ deployment: result.deploymentStop });
+        return successResponse({ success: result.deploymentStop });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
@@ -336,12 +339,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
         deploymentId: deploymentIdSchema,
       },
       outputSchema: {
-        deployment: z
-          .object({
-            id: z.string(),
-            status: z.string(),
-          })
-          .passthrough(),
+        success: z.boolean(),
       },
     },
     async ({ deploymentId }) => {
@@ -353,7 +351,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse({ deployment: result.deploymentRestart });
+        return successResponse({ success: result.deploymentRestart });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
@@ -369,12 +367,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
         deploymentId: deploymentIdSchema,
       },
       outputSchema: {
-        deployment: z
-          .object({
-            id: z.string(),
-            status: z.string(),
-          })
-          .passthrough(),
+        success: z.boolean(),
       },
     },
     async ({ deploymentId }) => {
@@ -386,7 +379,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse({ deployment: result.deploymentCancel });
+        return successResponse({ success: result.deploymentCancel });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
@@ -402,12 +395,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
         deploymentId: deploymentIdSchema,
       },
       outputSchema: {
-        deployment: z
-          .object({
-            id: z.string(),
-            status: z.string(),
-          })
-          .passthrough(),
+        success: z.boolean(),
       },
     },
     async ({ deploymentId }) => {
@@ -419,7 +407,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse({ deployment: result.deploymentRollback });
+        return successResponse({ success: result.deploymentRollback });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
@@ -452,22 +440,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
       },
       outputSchema: {
         events: z.object({
-          edges: z.array(
-            z.object({
-              cursor: z.string(),
-              node: z.object({
-                id: z.string(),
-                action: z.string(),
-                createdAt: z.string(),
-              }),
-            }),
-          ),
-          pageInfo: z.object({
-            hasNextPage: z.boolean(),
-            hasPreviousPage: z.boolean(),
-            startCursor: z.string().nullable(),
-            endCursor: z.string().nullable(),
-          }),
+          __typename: z.string().optional(),
         }),
       },
     },
@@ -488,7 +461,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse(data);
+        return successResponse({ events: data.deploymentEvents });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }

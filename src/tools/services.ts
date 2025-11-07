@@ -226,11 +226,17 @@ export const registerServiceTools = (server: McpServer): void => {
       },
       outputSchema: {
         service: z.object({
+          __typename: z.string().optional(),
           id: z.string(),
           name: z.string(),
           projectId: z.string(),
           icon: z.string().nullable(),
           createdAt: z.string(),
+          updatedAt: z.string(),
+          deletedAt: z.string().nullable(),
+          templateServiceId: z.string().nullable(),
+          templateThreadSlug: z.string().nullable(),
+          featureFlags: z.array(z.string()),
         }),
       },
     },

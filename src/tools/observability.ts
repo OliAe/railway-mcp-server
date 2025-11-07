@@ -53,9 +53,26 @@ export const registerObservabilityTools = (server: McpServer): void => {
       outputSchema: {
         logs: z.array(
           z.object({
-            message: z.string(),
-            severity: z.string().nullable(),
+            __typename: z.string().optional(),
+            clientUa: z.string(),
+            deploymentId: z.string(),
+            deploymentInstanceId: z.string(),
+            downstreamProto: z.string(),
+            edgeRegion: z.string(),
+            host: z.string(),
+            httpStatus: z.number(),
+            method: z.string(),
+            path: z.string(),
+            requestId: z.string(),
+            responseDetails: z.string(),
+            rxBytes: z.number(),
+            srcIp: z.string(),
             timestamp: z.string(),
+            totalDuration: z.number(),
+            txBytes: z.number(),
+            upstreamAddress: z.string(),
+            upstreamProto: z.string(),
+            upstreamRqDuration: z.number(),
           }),
         ),
       },
@@ -117,6 +134,7 @@ export const registerObservabilityTools = (server: McpServer): void => {
       outputSchema: {
         logs: z.array(
           z.object({
+            __typename: z.string().optional(),
             message: z.string(),
             severity: z.string().nullable(),
             timestamp: z.string(),
@@ -171,22 +189,7 @@ export const registerObservabilityTools = (server: McpServer): void => {
       },
       outputSchema: {
         events: z.object({
-          edges: z.array(
-            z.object({
-              cursor: z.string(),
-              node: z.object({
-                id: z.string(),
-                action: z.string(),
-                createdAt: z.string(),
-              }),
-            }),
-          ),
-          pageInfo: z.object({
-            hasNextPage: z.boolean(),
-            hasPreviousPage: z.boolean(),
-            startCursor: z.string().nullable(),
-            endCursor: z.string().nullable(),
-          }),
+          __typename: z.string().optional(),
         }),
       },
     },
@@ -209,7 +212,7 @@ export const registerObservabilityTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse(data);
+        return successResponse({ events: data.events });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
