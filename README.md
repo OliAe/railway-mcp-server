@@ -23,19 +23,53 @@ This will add the following configuration to your Cursor settings:
 }
 ```
 
+## Token Types & Scope
+
+Railway supports three types of API tokens, each with different access levels:
+
+- **Account Token**: Global access to everything, multiple workspaces
+- **Workspace Token**: Single workspace access, multiple projects
+- **Project Token**: Scoped to specific environment within a project
+
+### Token Scope Matrix
+
+| Tool Category           | Account Token  | Workspace Token   | Project Token     |
+| ----------------------- | -------------- | ----------------- | ----------------- |
+| **Projects**            | ✅ Full Access | ✅ Full Access    | ❌ Not Authorized |
+| **Services**            | ✅ Full Access | ✅ Full Access    | ❌ Not Authorized |
+| **Environments**        | ✅ Full Access | ✅ Full Access    | ❌ Not Authorized |
+| **Deployments**         | ✅ Full Access | ✅ Full Access    | ❌ Not Authorized |
+| **Variables**           | ✅ Full Access | ✅ Full Access    | ❌ Not Authorized |
+| **Domains**             | ✅ Full Access | ✅ Full Access    | ❌ Not Authorized |
+| **Templates**           | ✅ Full Access | ✅ Full Access    | ✅ Full Access    |
+| **Networking**          | ✅ Full Access | ✅ Full Access    | ❌ Not Authorized |
+| **Observability**       | ✅ Full Access | ✅ Full Access    | ❌ Not Authorized |
+| **Workflows**           | ⚠️ Limited     | ⚠️ Limited        | ❌ Not Authorized |
+| **GitHub Integrations** | ✅ Full Access | ❌ Not Authorized | ❌ Not Authorized |
+| **Volumes**             | ✅ Full Access | ✅ Full Access    | ✅ Backups Only   |
+
+**Legend:**
+
+- ✅ Full Access - All operations work
+- ⚠️ Limited - Some operations may be restricted
+- ❌ Not Authorized - Token scope doesn't allow access
+
+**Key Differences:**
+
+- **Account Token**: Required for GitHub integrations. All other operations work identically to Workspace Token.
+- **Workspace Token**: Best for most operations. Workflow status works for template deployments but volume backup workflows return "Not Authorized". All other operations work correctly.
+- **Project Token**: Environment-scoped access. Only templates work fully. Volume backup operations (create, list) work with valid volume instance IDs in the token's scoped environment. Volume creation is not authorized. Deployment and observability operations return "Not Authorized" even for deployments in the token's scoped environment.
+
 ## Available Tools
 
 This MCP server provides **47 tools** for managing Railway infrastructure, organized into the following categories:
-
-### Connection & Verification
-
-- `railway_verify_connection` - Verify Railway API authentication
 
 ### Projects
 
 - `railway_projects_list` - List all projects for a user or workspace
 - `railway_project_create` - Create a new Railway project
 - `railway_project_get` - Get project details
+- `railway_workspaces_list` - List all workspaces the user is a member of
 
 ### Services
 
@@ -68,7 +102,7 @@ This MCP server provides **47 tools** for managing Railway infrastructure, organ
 
 - `railway_variable_upsert` - Create or update a variable (project or service scope)
 - `railway_variables_collection_upsert` - Bulk create/update multiple variables
-- `railway_variables_render_for_deployment` - Resolve concrete variables for a deployment
+- `railway_variables_render_for_deployment` - Resolve concrete variables for a service deployment
 
 ### Templates
 
@@ -86,9 +120,10 @@ This MCP server provides **47 tools** for managing Railway infrastructure, organ
 ### Volumes
 
 - `railway_volume_create` - Create a new volume for persistent storage
+- `railway_volume_instances_list` - List all volume instances for an environment
 - `railway_volume_instance_backup_create` - Create a volume backup
 - `railway_volume_instance_backup_list` - List all backups for a volume
-- `railway_volume_instance_backup_restore` - Restore a volume from backup
+- `railway_volume_instance_backup_restore` - Restore a volume instance from a backup
 
 ### Observability
 
