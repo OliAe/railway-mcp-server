@@ -222,4 +222,67 @@ export const registerVolumeTools = (server: McpServer): void => {
       return successResponse({ workflowId: workflowIdResult.value });
     },
   );
+
+  server.registerTool(
+    'railway_volume_instances_list',
+    {
+      title: 'List Volume Instances',
+      description: 'List all volume instances for an environment (temporary tool for testing).',
+      inputSchema: {
+        environmentId: z
+          .string()
+          .min(1, 'Environment ID is required')
+          .describe('The ID of the environment.'),
+      },
+      outputSchema: {
+        instances: z.array(
+          z.object({
+            __typename: z.string().optional(),
+            id: z.string(),
+            environmentId: z.string(),
+            mountPath: z.string(),
+            state: z.string().nullable(),
+            volumeId: z.string(),
+            createdAt: z.string(),
+            currentSizeMB: z.number().nullable(),
+            sizeMB: z.number().nullable(),
+            region: z.string().nullable(),
+            serviceId: z.string().nullable(),
+            externalId: z.string().nullable(),
+          }),
+        ),
+      },
+    },
+    async ({ environmentId }) => {
+      const railway = getRailway();
+      const result = await railway.environments.get({
+        variables: { id: environmentId },
+      });
+
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
+      }
+
+      const environmentResult = unwrapField(result, 'environment', 'Environment not found.');
+      if (environmentResult.isErr()) {
+        return errorResponse(environmentResult.error.message);
+      }
+
+      const environment = environmentResult.value as {
+        volumeInstances?: {
+          edges?: { node: unknown }[];
+        } | null;
+      };
+
+      if (!environment.volumeInstances) {
+        return errorResponse(
+          `Volume instances field not found in response. This may indicate the GraphQL query needs to be regenerated. Response keys: ${Object.keys(environment).join(', ')}`,
+        );
+      }
+
+      const instances = environment.volumeInstances?.edges?.map((edge) => edge.node) ?? [];
+
+      return successResponse({ instances });
+    },
+  );
 };
