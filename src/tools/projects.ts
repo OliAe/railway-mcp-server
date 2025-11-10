@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { unwrapField } from '@crisog/railway-sdk';
+import { unwrapArray, unwrapField } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -317,6 +317,58 @@ export const registerProjectTools = (server: McpServer): void => {
       }
 
       return successResponse({ project: projectResult.value });
+    },
+  );
+
+  server.registerTool(
+    'railway_workspaces_list',
+    {
+      title: 'List Workspaces',
+      description: 'List all workspaces the user can access.',
+      inputSchema: {
+        projectId: z
+          .string()
+          .min(1)
+          .describe('Optional project ID to filter workspaces.')
+          .optional(),
+      },
+      outputSchema: {
+        workspaces: z.array(
+          z.object({
+            __typename: z.string().optional(),
+            id: z.string(),
+            name: z.string(),
+            avatar: z.string().nullable(),
+            createdAt: z.string(),
+            plan: z.string(),
+            preferredRegion: z.string().nullable(),
+            teamId: z.string().nullable(),
+            allowDeprecatedRegions: z.boolean().nullable(),
+            customerState: z.string(),
+            hasBAA: z.boolean(),
+            isTrialing: z.boolean().nullable(),
+          }),
+        ),
+      },
+    },
+    async ({ projectId }) => {
+      const railway = getRailway();
+      const result = await railway.workspaces.list({
+        variables: {
+          projectId: projectId ?? null,
+        },
+      });
+
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
+      }
+
+      const workspacesResult = unwrapArray(result, 'externalWorkspaces', 'Workspaces not found.');
+      if (workspacesResult.isErr()) {
+        return errorResponse(workspacesResult.error.message);
+      }
+
+      return successResponse({ workspaces: workspacesResult.value });
     },
   );
 };
