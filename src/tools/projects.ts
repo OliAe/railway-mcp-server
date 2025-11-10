@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { unwrapArray, unwrapField } from '@crisog/railway-sdk';
+import { unwrapField } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -324,14 +324,8 @@ export const registerProjectTools = (server: McpServer): void => {
     'railway_workspaces_list',
     {
       title: 'List Workspaces',
-      description: 'List all workspaces the user can access.',
-      inputSchema: {
-        projectId: z
-          .string()
-          .min(1)
-          .describe('Optional project ID to filter workspaces.')
-          .optional(),
-      },
+      description: 'List all workspaces the user is a member of.',
+      inputSchema: {},
       outputSchema: {
         workspaces: z.array(
           z.object({
@@ -340,35 +334,33 @@ export const registerProjectTools = (server: McpServer): void => {
             name: z.string(),
             avatar: z.string().nullable(),
             createdAt: z.string(),
-            plan: z.string(),
             preferredRegion: z.string().nullable(),
-            teamId: z.string().nullable(),
-            allowDeprecatedRegions: z.boolean().nullable(),
-            customerState: z.string(),
-            hasBAA: z.boolean(),
-            isTrialing: z.boolean().nullable(),
+            subscriptionModel: z.string(),
+            supportTierOverride: z.string().nullable(),
+            banReason: z.string().nullable(),
+            discordRole: z.string().nullable(),
+            slackChannelId: z.string().nullable(),
           }),
         ),
       },
     },
-    async ({ projectId }) => {
+    async () => {
       const railway = getRailway();
-      const result = await railway.workspaces.list({
-        variables: {
-          projectId: projectId ?? null,
-        },
-      });
+      const result = await railway.account.me();
 
       if (result.isErr()) {
         return errorResponse(toRailwayErrorMessage(result.error));
       }
 
-      const workspacesResult = unwrapArray(result, 'externalWorkspaces', 'Workspaces not found.');
-      if (workspacesResult.isErr()) {
-        return errorResponse(workspacesResult.error.message);
+      const meResult = unwrapField(result, 'me', 'User not found.');
+      if (meResult.isErr()) {
+        return errorResponse(meResult.error.message);
       }
 
-      return successResponse({ workspaces: workspacesResult.value });
+      const me = meResult.value;
+      const workspaces = me.workspaces ?? [];
+
+      return successResponse({ workspaces });
     },
   );
 };
