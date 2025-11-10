@@ -45,7 +45,15 @@ export const toRailwayErrorMessage = (error: unknown): string => {
   }
 
   if (error instanceof GraphQLRequestError) {
-    return `Railway request failed: ${error.message}`;
+    const message = `Railway request failed: ${error.message}`;
+
+    if (error.rawBody) {
+      const preview =
+        error.rawBody.length > 200 ? `${error.rawBody.substring(0, 200)}...` : error.rawBody;
+      return `${message}\nResponse body: ${preview}`;
+    }
+
+    return message;
   }
 
   if (error instanceof Error) {
