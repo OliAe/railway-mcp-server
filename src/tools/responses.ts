@@ -29,9 +29,5 @@ export const errorResponse = (message: string): CallToolResult => ({
       text: message,
     },
   ],
-  structuredContent: {
-    success: false,
-    message,
-  },
   isError: true,
 });
