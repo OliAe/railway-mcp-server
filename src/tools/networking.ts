@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
+import { unwrapField, unwrapArray } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -53,23 +54,32 @@ export const registerNetworkingTools = (server: McpServer): void => {
       },
     },
     async ({ projectId, environmentId, name, tags }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.networking.privateNetworks.createOrGet({
-          variables: {
-            input: {
-              projectId,
-              environmentId,
-              name,
-              tags,
-            },
+      const railway = getRailway();
+      const result = await railway.networking.privateNetworks.createOrGet({
+        variables: {
+          input: {
+            projectId,
+            environmentId,
+            name,
+            tags,
           },
-        });
+        },
+      });
 
-        return successResponse({ network: result.privateNetworkCreateOrGet });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const networkResult = unwrapField(
+        result,
+        'privateNetworkCreateOrGet',
+        'Failed to create or get private network.',
+      );
+      if (networkResult.isErr()) {
+        return errorResponse(networkResult.error.message);
+      }
+
+      return successResponse({ network: networkResult.value });
     },
   );
 
@@ -99,18 +109,27 @@ export const registerNetworkingTools = (server: McpServer): void => {
       },
     },
     async ({ environmentId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.networking.privateNetworks.list({
-          variables: {
-            environmentId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.networking.privateNetworks.list({
+        variables: {
+          environmentId,
+        },
+      });
 
-        return successResponse({ networks: result.privateNetworks });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const networksResult = unwrapArray(
+        result,
+        'privateNetworks',
+        'Invalid response from Railway: expected array of networks.',
+      );
+      if (networksResult.isErr()) {
+        return errorResponse(networksResult.error.message);
+      }
+
+      return successResponse({ networks: networksResult.value });
     },
   );
 
@@ -140,19 +159,28 @@ export const registerNetworkingTools = (server: McpServer): void => {
       },
     },
     async ({ environmentId, serviceId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.networking.tcpProxies.list({
-          variables: {
-            environmentId,
-            serviceId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.networking.tcpProxies.list({
+        variables: {
+          environmentId,
+          serviceId,
+        },
+      });
 
-        return successResponse({ proxies: result.tcpProxies });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const proxiesResult = unwrapArray(
+        result,
+        'tcpProxies',
+        'Invalid response from Railway: expected array of TCP proxies.',
+      );
+      if (proxiesResult.isErr()) {
+        return errorResponse(proxiesResult.error.message);
+      }
+
+      return successResponse({ proxies: proxiesResult.value });
     },
   );
 };

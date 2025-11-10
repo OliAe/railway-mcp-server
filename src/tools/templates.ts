@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
+import { unwrapField } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -63,22 +64,27 @@ export const registerTemplateTools = (server: McpServer): void => {
         return errorResponse('Provide either first or last, not both.');
       }
 
-      try {
-        const railway = getRailway();
-        const result = await railway.templates.list({
-          variables: {
-            first: first ?? null,
-            last: last ?? null,
-            after: after ?? null,
-            before: before ?? null,
-            recommended: recommended ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.templates.list({
+        variables: {
+          first: first ?? null,
+          last: last ?? null,
+          after: after ?? null,
+          before: before ?? null,
+          recommended: recommended ?? null,
+        },
+      });
 
-        return successResponse({ templates: result.templates });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const templatesResult = unwrapField(result, 'templates', 'Failed to list templates.');
+      if (templatesResult.isErr()) {
+        return errorResponse(templatesResult.error.message);
+      }
+
+      return successResponse({ templates: templatesResult.value });
     },
   );
 
@@ -102,24 +108,25 @@ export const registerTemplateTools = (server: McpServer): void => {
         return errorResponse(identifierCheck.message ?? 'Invalid template identifier.');
       }
 
-      try {
-        const railway = getRailway();
-        const result = await railway.templates.get({
-          variables: {
-            code: code ?? null,
-            owner: owner ?? null,
-            repo: repo ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.templates.get({
+        variables: {
+          code: code ?? null,
+          owner: owner ?? null,
+          repo: repo ?? null,
+        },
+      });
 
-        if (!result.template) {
-          return errorResponse('Template not found.');
-        }
-
-        return successResponse({ template: result.template });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const templateResult = unwrapField(result, 'template', 'Template not found.');
+      if (templateResult.isErr()) {
+        return errorResponse(templateResult.error.message);
+      }
+
+      return successResponse({ template: templateResult.value });
     },
   );
 
@@ -167,8 +174,10 @@ export const registerTemplateTools = (server: McpServer): void => {
           .object({
             status: z.string(),
             error: z.string().nullable(),
+            __typename: z.string().optional(),
           })
           .optional(),
+        __typename: z.string().optional(),
       },
     },
     async ({
@@ -194,98 +203,132 @@ export const registerTemplateTools = (server: McpServer): void => {
         return errorResponse('environmentId is required when deploying into an existing project.');
       }
 
-      try {
-        const railway = getRailway();
+      const railway = getRailway();
 
-        let resolvedTemplateId = templateId?.trim() ?? null;
-        let resolvedConfig = serializedConfig ?? null;
+      let resolvedTemplateId = templateId?.trim() ?? null;
+      let resolvedConfig: unknown = serializedConfig ?? null;
 
-        const canLookup = Boolean(code?.trim() || (owner?.trim() && repo?.trim()));
-        const needsLookup =
-          (!resolvedTemplateId || resolvedConfig === null || resolvedConfig === undefined) &&
-          canLookup;
+      const canLookup = Boolean(code?.trim() || (owner?.trim() && repo?.trim()));
+      const needsLookup =
+        (!resolvedTemplateId || resolvedConfig === null || resolvedConfig === undefined) &&
+        canLookup;
 
-        if (needsLookup) {
-          const lookup = await railway.templates.get({
-            variables: {
-              code: code ?? null,
-              owner: owner ?? null,
-              repo: repo ?? null,
-            },
-          });
-
-          const template = lookup.template;
-          if (!template) {
-            return errorResponse('Template not found.');
-          }
-
-          if (!resolvedTemplateId) {
-            resolvedTemplateId = template.id;
-          }
-
-          if (resolvedConfig === null || resolvedConfig === undefined) {
-            resolvedConfig = template.serializedConfig;
-          }
-        }
-
-        if (!resolvedTemplateId) {
-          return errorResponse(
-            'Unable to resolve template ID. Provide templateId or template code.',
-          );
-        }
-
-        if (resolvedConfig === null || resolvedConfig === undefined) {
-          return errorResponse(
-            'Unable to resolve serialized template config. Provide serializedConfig or identify the template.',
-          );
-        }
-
-        const result = await railway.templates.deploy({
+      if (needsLookup) {
+        const lookup = await railway.templates.get({
           variables: {
-            input: {
-              templateId: resolvedTemplateId,
-              serializedConfig: resolvedConfig,
-              projectId: projectId ?? null,
-              environmentId: environmentId ?? null,
-              workspaceId: workspaceId ?? null,
-            },
+            code: code ?? null,
+            owner: owner ?? null,
+            repo: repo ?? null,
           },
         });
 
-        const deployment = result.templateDeployV2;
-
-        if (!deployment) {
-          return errorResponse('Railway did not return deployment details.');
+        if (lookup.isErr()) {
+          return errorResponse(toRailwayErrorMessage(lookup.error));
         }
 
-        let workflowStatusResult: { status: string; error: string | null } | undefined;
+        const templateResult = unwrapField(lookup, 'template', 'Template not found.');
+        if (templateResult.isErr()) {
+          return errorResponse(templateResult.error.message);
+        }
 
-        if (deployment.workflowId) {
-          try {
-            const status = await railway.projects.workflows.status({
-              variables: { workflowId: deployment.workflowId },
-            });
+        const template = templateResult.value as { id: string; serializedConfig: unknown };
 
-            if (status.workflowStatus) {
-              workflowStatusResult = {
-                status: status.workflowStatus.status,
-                error: status.workflowStatus.error,
-              };
-            }
-          } catch (statusError) {
+        if (!resolvedTemplateId) {
+          resolvedTemplateId = template.id;
+        }
+
+        if (resolvedConfig === null || resolvedConfig === undefined) {
+          resolvedConfig = template.serializedConfig;
+        }
+      }
+
+      if (!resolvedTemplateId) {
+        return errorResponse('Unable to resolve template ID. Provide templateId or template code.');
+      }
+
+      if (resolvedConfig === null || resolvedConfig === undefined) {
+        return errorResponse(
+          'Unable to resolve serialized template config. Provide serializedConfig or identify the template.',
+        );
+      }
+
+      const result = await railway.templates.deploy({
+        variables: {
+          input: {
+            templateId: resolvedTemplateId,
+            serializedConfig: resolvedConfig,
+            projectId: projectId ?? null,
+            environmentId: environmentId ?? null,
+            workspaceId: workspaceId ?? null,
+          },
+        },
+      });
+
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
+      }
+
+      const deploymentResult = unwrapField(
+        result,
+        'templateDeployV2',
+        'Railway did not return deployment details.',
+      );
+      if (deploymentResult.isErr()) {
+        return errorResponse(deploymentResult.error.message);
+      }
+
+      const deployment = deploymentResult.value as {
+        projectId: string;
+        workflowId: string | null;
+        __typename?: string;
+      };
+
+      const deploymentResponse = {
+        projectId: deployment.projectId,
+        workflowId: deployment.workflowId,
+        ...(deployment.__typename ? { __typename: deployment.__typename } : {}),
+      };
+
+      let workflowStatusResult:
+        | { status: string; error: string | null; __typename?: string }
+        | undefined;
+
+      if (deployment.workflowId) {
+        const status = await railway.projects.workflows.status({
+          variables: { workflowId: deployment.workflowId },
+        });
+
+        if (status.isErr()) {
+          workflowStatusResult = {
+            status: 'UNKNOWN',
+            error: status.error.message,
+          };
+        } else {
+          const workflowStatusField = unwrapField(
+            status,
+            'workflowStatus',
+            'Workflow status not found.',
+          );
+          if (workflowStatusField.isOk()) {
+            const workflowStatus = workflowStatusField.value as {
+              status: string;
+              error: string | null;
+              __typename?: string;
+            };
             workflowStatusResult = {
-              status: 'UNKNOWN',
-              error: statusError instanceof Error ? statusError.message : String(statusError),
+              status: workflowStatus.status,
+              error: workflowStatus.error ?? null,
+              ...(workflowStatus.__typename ? { __typename: workflowStatus.__typename } : {}),
             };
           }
         }
-
-        return successResponse(
-          workflowStatusResult ? { deployment, workflow: workflowStatusResult } : { deployment },
-        );
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
       }
+
+      return successResponse(
+        workflowStatusResult
+          ? { deployment: deploymentResponse, workflow: workflowStatusResult }
+          : { deployment: deploymentResponse },
+      );
     },
   );
 };

@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
+import { unwrapField } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -53,22 +54,27 @@ export const registerDomainTools = (server: McpServer): void => {
       },
     },
     async ({ serviceId, environmentId, targetPort }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.services.domains.create({
-          variables: {
-            input: {
-              serviceId,
-              environmentId,
-              targetPort: targetPort ?? null,
-            },
+      const railway = getRailway();
+      const result = await railway.services.domains.create({
+        variables: {
+          input: {
+            serviceId,
+            environmentId,
+            targetPort: targetPort ?? null,
           },
-        });
+        },
+      });
 
-        return successResponse({ domain: result.serviceDomainCreate });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const domainResult = unwrapField(result, 'serviceDomainCreate', 'Failed to generate domain.');
+      if (domainResult.isErr()) {
+        return errorResponse(domainResult.error.message);
+      }
+
+      return successResponse({ domain: domainResult.value });
     },
   );
 
@@ -89,20 +95,29 @@ export const registerDomainTools = (server: McpServer): void => {
       },
     },
     async ({ projectId, environmentId, serviceId }) => {
-      try {
-        const railway = getRailway();
-        const data = await railway.domains.list({
-          variables: {
-            projectId,
-            environmentId,
-            serviceId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.domains.list({
+        variables: {
+          projectId,
+          environmentId,
+          serviceId,
+        },
+      });
 
-        return successResponse(data);
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const domainsResult = unwrapField(
+        result,
+        'domains',
+        'Invalid response from Railway: domains not found.',
+      );
+      if (domainsResult.isErr()) {
+        return errorResponse(domainsResult.error.message);
+      }
+
+      return successResponse({ domains: domainsResult.value });
     },
   );
 
@@ -137,27 +152,37 @@ export const registerDomainTools = (server: McpServer): void => {
           updatedAt: z.string().nullable(),
           deletedAt: z.string().nullable(),
         }),
+        __typename: z.string().optional(),
       },
     },
     async ({ projectId, environmentId, serviceId, domain, targetPort }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.domains.custom.create({
-          variables: {
-            input: {
-              projectId,
-              environmentId,
-              serviceId,
-              domain,
-              targetPort: targetPort ?? null,
-            },
+      const railway = getRailway();
+      const result = await railway.domains.custom.create({
+        variables: {
+          input: {
+            projectId,
+            environmentId,
+            serviceId,
+            domain,
+            targetPort: targetPort ?? null,
           },
-        });
+        },
+      });
 
-        return successResponse({ domain: result.customDomainCreate });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const domainResult = unwrapField(
+        result,
+        'customDomainCreate',
+        'Failed to create custom domain.',
+      );
+      if (domainResult.isErr()) {
+        return errorResponse(domainResult.error.message);
+      }
+
+      return successResponse({ domain: domainResult.value });
     },
   );
 
@@ -176,18 +201,27 @@ export const registerDomainTools = (server: McpServer): void => {
       },
     },
     async ({ domain }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.domains.custom.available({
-          variables: {
-            domain,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.domains.custom.available({
+        variables: {
+          domain,
+        },
+      });
 
-        return successResponse(result.customDomainAvailable);
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const availabilityResult = unwrapField(
+        result,
+        'customDomainAvailable',
+        'Invalid response from Railway: domain availability not found.',
+      );
+      if (availabilityResult.isErr()) {
+        return errorResponse(availabilityResult.error.message);
+      }
+
+      return successResponse(availabilityResult.value);
     },
   );
 };

@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
+import { unwrapField, unwrapArray } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -27,17 +28,27 @@ export const registerIntegrationTools = (server: McpServer): void => {
             installationId: z.string(),
           }),
         ),
+        __typename: z.string().optional(),
       },
     },
     async () => {
-      try {
-        const railway = getRailway();
-        const result = await railway.integrations.github.listRepos();
+      const railway = getRailway();
+      const result = await railway.integrations.github.listRepos();
 
-        return successResponse({ repos: result.githubRepos });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const reposResult = unwrapArray(
+        result,
+        'githubRepos',
+        'Invalid response from Railway: expected array of repositories.',
+      );
+      if (reposResult.isErr()) {
+        return errorResponse(reposResult.error.message);
+      }
+
+      return successResponse({ repos: reposResult.value });
     },
   );
 
@@ -67,19 +78,28 @@ export const registerIntegrationTools = (server: McpServer): void => {
       },
     },
     async ({ owner, repo }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.integrations.github.listBranches({
-          variables: {
-            owner,
-            repo,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.integrations.github.listBranches({
+        variables: {
+          owner,
+          repo,
+        },
+      });
 
-        return successResponse({ branches: result.githubRepoBranches });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const branchesResult = unwrapArray(
+        result,
+        'githubRepoBranches',
+        'Invalid response from Railway: expected array of branches.',
+      );
+      if (branchesResult.isErr()) {
+        return errorResponse(branchesResult.error.message);
+      }
+
+      return successResponse({ branches: branchesResult.value });
     },
   );
 
@@ -101,22 +121,31 @@ export const registerIntegrationTools = (server: McpServer): void => {
       },
     },
     async ({ projectId, repo, branch }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.integrations.github.deployRepo({
-          variables: {
-            input: {
-              projectId,
-              repo,
-              branch: branch ?? null,
-            },
+      const railway = getRailway();
+      const result = await railway.integrations.github.deployRepo({
+        variables: {
+          input: {
+            projectId,
+            repo,
+            branch: branch ?? null,
           },
-        });
+        },
+      });
 
-        return successResponse({ projectId: result.githubRepoDeploy });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const projectIdResult = unwrapField(
+        result,
+        'githubRepoDeploy',
+        'Failed to deploy repository.',
+      );
+      if (projectIdResult.isErr()) {
+        return errorResponse(projectIdResult.error.message);
+      }
+
+      return successResponse({ projectId: projectIdResult.value });
     },
   );
 };

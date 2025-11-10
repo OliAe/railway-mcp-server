@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { unwrapField, unwrapNested } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -72,22 +73,31 @@ export const registerServiceTools = (server: McpServer): void => {
         return errorResponse('Provide either first or last, not both.');
       }
 
-      try {
-        const railway = getRailway();
-        const data = await railway.services.list({
-          variables: {
-            projectId,
-            first: first ?? null,
-            after: after ?? null,
-            last: last ?? null,
-            before: before ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.services.list({
+        variables: {
+          projectId,
+          first: first ?? null,
+          after: after ?? null,
+          last: last ?? null,
+          before: before ?? null,
+        },
+      });
 
-        return successResponse({ services: data.project.services });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const servicesResult = unwrapNested(
+        result,
+        ['project', 'services'],
+        'Invalid response from Railway: services not found.',
+      );
+      if (servicesResult.isErr()) {
+        return errorResponse(servicesResult.error.message);
+      }
+
+      return successResponse({ services: servicesResult.value });
     },
   );
 
@@ -116,18 +126,23 @@ export const registerServiceTools = (server: McpServer): void => {
       },
     },
     async ({ serviceId }) => {
-      try {
-        const railway = getRailway();
-        const data = await railway.services.get({
-          variables: {
-            id: serviceId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.services.get({
+        variables: {
+          id: serviceId,
+        },
+      });
 
-        return successResponse(data);
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const serviceResult = unwrapField(result, 'service', 'Service not found.');
+      if (serviceResult.isErr()) {
+        return errorResponse(serviceResult.error.message);
+      }
+
+      return successResponse({ service: serviceResult.value });
     },
   );
 
@@ -162,22 +177,31 @@ export const registerServiceTools = (server: McpServer): void => {
         return errorResponse('Provide at least one field to update.');
       }
 
-      try {
-        const railway = getRailway();
-        const result = await railway.services.update({
-          variables: {
-            id: serviceId,
-            input: {
-              name: name ?? null,
-              icon: icon ?? null,
-            },
+      const railway = getRailway();
+      const result = await railway.services.update({
+        variables: {
+          id: serviceId,
+          input: {
+            name: name ?? null,
+            icon: icon ?? null,
           },
-        });
+        },
+      });
 
-        return successResponse({ service: result.serviceUpdate });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const serviceResult = unwrapField(
+        result,
+        'serviceUpdate',
+        'Service not found or update failed.',
+      );
+      if (serviceResult.isErr()) {
+        return errorResponse(serviceResult.error.message);
+      }
+
+      return successResponse({ service: serviceResult.value });
     },
   );
 
@@ -197,20 +221,29 @@ export const registerServiceTools = (server: McpServer): void => {
       },
     },
     async ({ serviceId, environmentId, commitSha }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.services.instances.deployV2({
-          variables: {
-            serviceId,
-            environmentId,
-            commitSha: commitSha ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.services.instances.deployV2({
+        variables: {
+          serviceId,
+          environmentId,
+          commitSha: commitSha ?? null,
+        },
+      });
 
-        return successResponse({ deploymentId: result.serviceInstanceDeployV2 });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const deploymentIdResult = unwrapField(
+        result,
+        'serviceInstanceDeployV2',
+        'Failed to deploy service.',
+      );
+      if (deploymentIdResult.isErr()) {
+        return errorResponse(deploymentIdResult.error.message);
+      }
+
+      return successResponse({ deploymentId: deploymentIdResult.value });
     },
   );
 
@@ -247,28 +280,33 @@ export const registerServiceTools = (server: McpServer): void => {
       },
     },
     async ({ projectId, environmentId, name, icon, branch }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.services.create({
-          variables: {
-            input: {
-              projectId,
-              environmentId,
-              name: name ?? null,
-              icon: icon ?? null,
-              branch: branch ?? null,
-              source: null,
-              registryCredentials: null,
-              templateServiceId: null,
-              variables: null,
-            },
+      const railway = getRailway();
+      const result = await railway.services.create({
+        variables: {
+          input: {
+            projectId,
+            environmentId,
+            name: name ?? null,
+            icon: icon ?? null,
+            branch: branch ?? null,
+            source: null,
+            registryCredentials: null,
+            templateServiceId: null,
+            variables: null,
           },
-        });
+        },
+      });
 
-        return successResponse({ service: result.serviceCreate });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const serviceResult = unwrapField(result, 'serviceCreate', 'Failed to create service.');
+      if (serviceResult.isErr()) {
+        return errorResponse(serviceResult.error.message);
+      }
+
+      return successResponse({ service: serviceResult.value });
     },
   );
 };

@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { unwrapField } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -67,24 +68,33 @@ export const registerProjectTools = (server: McpServer): void => {
         return errorResponse('Provide either first or last, not both.');
       }
 
-      try {
-        const railway = getRailway();
-        const data = await railway.projects.list({
-          variables: {
-            userId: userId ?? null,
-            workspaceId: workspaceId ?? null,
-            includeDeleted: includeDeleted ?? null,
-            first: first ?? null,
-            after: after ?? null,
-            last: last ?? null,
-            before: before ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.projects.list({
+        variables: {
+          userId: userId ?? null,
+          workspaceId: workspaceId ?? null,
+          includeDeleted: includeDeleted ?? null,
+          first: first ?? null,
+          after: after ?? null,
+          last: last ?? null,
+          before: before ?? null,
+        },
+      });
 
-        return successResponse(data);
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const projectsResult = unwrapField(
+        result,
+        'projects',
+        'Invalid response from Railway: projects not found.',
+      );
+      if (projectsResult.isErr()) {
+        return errorResponse(projectsResult.error.message);
+      }
+
+      return successResponse({ projects: projectsResult.value });
     },
   );
 
@@ -185,32 +195,33 @@ export const registerProjectTools = (server: McpServer): void => {
       },
     },
     async ({ name, workspaceId, description, isPublic, prDeploys, defaultEnvironmentName }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.projects.create({
-          variables: {
-            input: {
-              isMonorepo: false,
-              repo: null,
-              runtime: null,
-              name,
-              workspaceId: workspaceId ?? null,
-              description: description ?? null,
-              isPublic: isPublic ?? null,
-              prDeploys: prDeploys ?? null,
-              defaultEnvironmentName: defaultEnvironmentName ?? null,
-            },
+      const railway = getRailway();
+      const result = await railway.projects.create({
+        variables: {
+          input: {
+            isMonorepo: false,
+            repo: null,
+            runtime: null,
+            name,
+            workspaceId: workspaceId ?? null,
+            description: description ?? null,
+            isPublic: isPublic ?? null,
+            prDeploys: prDeploys ?? null,
+            defaultEnvironmentName: defaultEnvironmentName ?? null,
           },
-        });
+        },
+      });
 
-        if (!result.projectCreate) {
-          return errorResponse('Failed to create project.');
-        }
-
-        return successResponse({ project: result.projectCreate });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const projectResult = unwrapField(result, 'projectCreate', 'Failed to create project.');
+      if (projectResult.isErr()) {
+        return errorResponse(projectResult.error.message);
+      }
+
+      return successResponse({ project: projectResult.value });
     },
   );
 
@@ -289,18 +300,23 @@ export const registerProjectTools = (server: McpServer): void => {
       },
     },
     async ({ projectId }) => {
-      try {
-        const railway = getRailway();
-        const data = await railway.projects.get({
-          variables: {
-            id: projectId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.projects.get({
+        variables: {
+          id: projectId,
+        },
+      });
 
-        return successResponse(data);
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const projectResult = unwrapField(result, 'project', 'Project not found.');
+      if (projectResult.isErr()) {
+        return errorResponse(projectResult.error.message);
+      }
+
+      return successResponse({ project: projectResult.value });
     },
   );
 };

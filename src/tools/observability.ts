@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
+import { unwrapField, unwrapArray } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -75,6 +76,7 @@ export const registerObservabilityTools = (server: McpServer): void => {
             upstreamRqDuration: z.number(),
           }),
         ),
+        __typename: z.string().optional(),
       },
     },
     async ({
@@ -89,27 +91,36 @@ export const registerObservabilityTools = (server: McpServer): void => {
       beforeDate,
       anchorDate,
     }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.observability.logs.http({
-          variables: {
-            deploymentId,
-            limit: limit ?? null,
-            filter: filter ?? null,
-            startDate: startDate ?? null,
-            endDate: endDate ?? null,
-            afterLimit: afterLimit ?? null,
-            beforeLimit: beforeLimit ?? null,
-            afterDate: afterDate ?? null,
-            beforeDate: beforeDate ?? null,
-            anchorDate: anchorDate ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.observability.logs.http({
+        variables: {
+          deploymentId,
+          limit: limit ?? null,
+          filter: filter ?? null,
+          startDate: startDate ?? null,
+          endDate: endDate ?? null,
+          afterLimit: afterLimit ?? null,
+          beforeLimit: beforeLimit ?? null,
+          afterDate: afterDate ?? null,
+          beforeDate: beforeDate ?? null,
+          anchorDate: anchorDate ?? null,
+        },
+      });
 
-        return successResponse({ logs: result.httpLogs });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const logsResult = unwrapArray(
+        result,
+        'httpLogs',
+        'Invalid response from Railway: expected array of HTTP logs.',
+      );
+      if (logsResult.isErr()) {
+        return errorResponse(logsResult.error.message);
+      }
+
+      return successResponse({ logs: logsResult.value });
     },
   );
 
@@ -140,25 +151,35 @@ export const registerObservabilityTools = (server: McpServer): void => {
             timestamp: z.string(),
           }),
         ),
+        __typename: z.string().optional(),
       },
     },
     async ({ deploymentId, limit, filter, startDate, endDate }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.observability.logs.build({
-          variables: {
-            deploymentId,
-            limit: limit ?? null,
-            filter: filter ?? null,
-            startDate: startDate ?? null,
-            endDate: endDate ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.observability.logs.build({
+        variables: {
+          deploymentId,
+          limit: limit ?? null,
+          filter: filter ?? null,
+          startDate: startDate ?? null,
+          endDate: endDate ?? null,
+        },
+      });
 
-        return successResponse({ logs: result.buildLogs });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const logsResult = unwrapArray(
+        result,
+        'buildLogs',
+        'Invalid response from Railway: expected array of build logs.',
+      );
+      if (logsResult.isErr()) {
+        return errorResponse(logsResult.error.message);
+      }
+
+      return successResponse({ logs: logsResult.value });
     },
   );
 
@@ -198,24 +219,33 @@ export const registerObservabilityTools = (server: McpServer): void => {
         return errorResponse('Provide either first or last, not both.');
       }
 
-      try {
-        const railway = getRailway();
-        const data = await railway.observability.events({
-          variables: {
-            projectId,
-            environmentId: environmentId ?? null,
-            filter: null,
-            first: first ?? null,
-            after: after ?? null,
-            last: last ?? null,
-            before: before ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.observability.events({
+        variables: {
+          projectId,
+          environmentId: environmentId ?? null,
+          filter: null,
+          first: first ?? null,
+          after: after ?? null,
+          last: last ?? null,
+          before: before ?? null,
+        },
+      });
 
-        return successResponse({ events: data.events });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const eventsResult = unwrapField(
+        result,
+        'events',
+        'Invalid response from Railway: events not found.',
+      );
+      if (eventsResult.isErr()) {
+        return errorResponse(eventsResult.error.message);
+      }
+
+      return successResponse({ events: eventsResult.value });
     },
   );
 };

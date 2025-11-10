@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
+import { unwrapField, unwrapArray } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -56,23 +57,32 @@ export const registerEnvironmentTools = (server: McpServer): void => {
         return errorResponse('Provide either first or last, not both.');
       }
 
-      try {
-        const railway = getRailway();
-        const data = await railway.environments.list({
-          variables: {
-            projectId,
-            isEphemeral: null,
-            first: first ?? null,
-            after: after ?? null,
-            last: last ?? null,
-            before: before ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.environments.list({
+        variables: {
+          projectId,
+          isEphemeral: null,
+          first: first ?? null,
+          after: after ?? null,
+          last: last ?? null,
+          before: before ?? null,
+        },
+      });
 
-        return successResponse(data);
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const environmentsResult = unwrapField(
+        result,
+        'environments',
+        'Invalid response from Railway: environments not found.',
+      );
+      if (environmentsResult.isErr()) {
+        return errorResponse(environmentsResult.error.message);
+      }
+
+      return successResponse({ environments: environmentsResult.value });
     },
   );
 
@@ -133,30 +143,35 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       applyChangesInBackground,
       skipInitialDeploys,
     }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.environments.create({
-          variables: {
-            input: {
-              projectId,
-              name,
-              sourceEnvironmentId: sourceEnvironmentId ?? null,
-              ephemeral: ephemeral ?? null,
-              stageInitialChanges: stageInitialChanges ?? null,
-              applyChangesInBackground: applyChangesInBackground ?? null,
-              skipInitialDeploys: skipInitialDeploys ?? null,
-            },
+      const railway = getRailway();
+      const result = await railway.environments.create({
+        variables: {
+          input: {
+            projectId,
+            name,
+            sourceEnvironmentId: sourceEnvironmentId ?? null,
+            ephemeral: ephemeral ?? null,
+            stageInitialChanges: stageInitialChanges ?? null,
+            applyChangesInBackground: applyChangesInBackground ?? null,
+            skipInitialDeploys: skipInitialDeploys ?? null,
           },
-        });
+        },
+      });
 
-        if (!result.environmentCreate) {
-          return errorResponse('Failed to create environment.');
-        }
-
-        return successResponse({ environment: result.environmentCreate });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const environmentResult = unwrapField(
+        result,
+        'environmentCreate',
+        'Failed to create environment.',
+      );
+      if (environmentResult.isErr()) {
+        return errorResponse(environmentResult.error.message);
+      }
+
+      return successResponse({ environment: environmentResult.value });
     },
   );
 
@@ -184,25 +199,30 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       },
     },
     async ({ environmentId, name }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.environments.rename({
-          variables: {
-            id: environmentId,
-            input: {
-              name,
-            },
+      const railway = getRailway();
+      const result = await railway.environments.rename({
+        variables: {
+          id: environmentId,
+          input: {
+            name,
           },
-        });
+        },
+      });
 
-        if (!result.environmentRename) {
-          return errorResponse('Failed to rename environment.');
-        }
-
-        return successResponse({ environment: result.environmentRename });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const environmentResult = unwrapField(
+        result,
+        'environmentRename',
+        'Failed to rename environment.',
+      );
+      if (environmentResult.isErr()) {
+        return errorResponse(environmentResult.error.message);
+      }
+
+      return successResponse({ environment: environmentResult.value });
     },
   );
 
@@ -252,24 +272,33 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       beforeDate,
       anchorDate,
     }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.environments.logs({
-          variables: {
-            environmentId,
-            afterLimit: afterLimit ?? null,
-            beforeLimit: beforeLimit ?? null,
-            filter: filter ?? null,
-            afterDate: afterDate ?? null,
-            beforeDate: beforeDate ?? null,
-            anchorDate: anchorDate ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.environments.logs({
+        variables: {
+          environmentId,
+          afterLimit: afterLimit ?? null,
+          beforeLimit: beforeLimit ?? null,
+          filter: filter ?? null,
+          afterDate: afterDate ?? null,
+          beforeDate: beforeDate ?? null,
+          anchorDate: anchorDate ?? null,
+        },
+      });
 
-        return successResponse({ logs: result.environmentLogs });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const logsResult = unwrapArray(
+        result,
+        'environmentLogs',
+        'Invalid response from Railway: expected array of logs.',
+      );
+      if (logsResult.isErr()) {
+        return errorResponse(logsResult.error.message);
+      }
+
+      return successResponse({ logs: logsResult.value });
     },
   );
 };

@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { unwrapField, unwrapArray } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -128,34 +129,43 @@ export const registerDeploymentTools = (server: McpServer): void => {
         return errorResponse('Provide either first or last, not both.');
       }
 
-      try {
-        const railway = getRailway();
-        const data = await railway.deployments.list({
-          variables: {
-            input: {
-              projectId,
-              serviceId: serviceId ?? null,
-              environmentId: environmentId ?? null,
-              includeDeleted: includeDeleted ?? null,
-              status:
-                statusIn || statusNotIn
-                  ? {
-                      in: statusIn ?? null,
-                      notIn: statusNotIn ?? null,
-                    }
-                  : null,
-            },
-            first: first ?? null,
-            after: after ?? null,
-            last: last ?? null,
-            before: before ?? null,
+      const railway = getRailway();
+      const result = await railway.deployments.list({
+        variables: {
+          input: {
+            projectId,
+            serviceId: serviceId ?? null,
+            environmentId: environmentId ?? null,
+            includeDeleted: includeDeleted ?? null,
+            status:
+              statusIn || statusNotIn
+                ? {
+                    in: statusIn ?? null,
+                    notIn: statusNotIn ?? null,
+                  }
+                : null,
           },
-        });
+          first: first ?? null,
+          after: after ?? null,
+          last: last ?? null,
+          before: before ?? null,
+        },
+      });
 
-        return successResponse({ deployments: data.deployments });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const deploymentsResult = unwrapField(
+        result,
+        'deployments',
+        'Invalid response from Railway: deployments not found.',
+      );
+      if (deploymentsResult.isErr()) {
+        return errorResponse(deploymentsResult.error.message);
+      }
+
+      return successResponse({ deployments: deploymentsResult.value });
     },
   );
 
@@ -186,21 +196,27 @@ export const registerDeploymentTools = (server: McpServer): void => {
           suggestAddServiceDomain: z.boolean(),
           meta: z.any().nullable(),
         }),
+        __typename: z.string().optional(),
       },
     },
     async ({ deploymentId }) => {
-      try {
-        const railway = getRailway();
-        const data = await railway.deployments.get({
-          variables: {
-            id: deploymentId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.deployments.get({
+        variables: {
+          id: deploymentId,
+        },
+      });
 
-        return successResponse({ deployment: data.deployment });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const deploymentResult = unwrapField(result, 'deployment', 'Deployment not found.');
+      if (deploymentResult.isErr()) {
+        return errorResponse(deploymentResult.error.message);
+      }
+
+      return successResponse({ deployment: deploymentResult.value });
     },
   );
 
@@ -225,30 +241,41 @@ export const registerDeploymentTools = (server: McpServer): void => {
       outputSchema: {
         logs: z.array(
           z.object({
+            __typename: z.string().optional(),
             message: z.string(),
             severity: z.string().nullable(),
             timestamp: z.string(),
           }),
         ),
+        __typename: z.string().optional(),
       },
     },
     async ({ deploymentId, limit, filter, startDate, endDate }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.deployments.logs({
-          variables: {
-            deploymentId,
-            limit: limit ?? null,
-            filter: filter ?? null,
-            startDate: startDate ?? null,
-            endDate: endDate ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.deployments.logs({
+        variables: {
+          deploymentId,
+          limit: limit ?? null,
+          filter: filter ?? null,
+          startDate: startDate ?? null,
+          endDate: endDate ?? null,
+        },
+      });
 
-        return successResponse({ logs: result.deploymentLogs });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const logsResult = unwrapArray(
+        result,
+        'deploymentLogs',
+        'Invalid response from Railway: expected array of logs.',
+      );
+      if (logsResult.isErr()) {
+        return errorResponse(logsResult.error.message);
+      }
+
+      return successResponse({ logs: logsResult.value });
     },
   );
 
@@ -283,22 +310,32 @@ export const registerDeploymentTools = (server: McpServer): void => {
           suggestAddServiceDomain: z.boolean(),
           meta: z.any().nullable(),
         }),
+        __typename: z.string().optional(),
       },
     },
     async ({ deploymentId, usePreviousImageTag }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.deployments.redeploy({
-          variables: {
-            id: deploymentId,
-            usePreviousImageTag: usePreviousImageTag ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.deployments.redeploy({
+        variables: {
+          id: deploymentId,
+          usePreviousImageTag: usePreviousImageTag ?? null,
+        },
+      });
 
-        return successResponse({ deployment: result.deploymentRedeploy });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const deploymentResult = unwrapField(
+        result,
+        'deploymentRedeploy',
+        'Deployment not found or cannot be redeployed.',
+      );
+      if (deploymentResult.isErr()) {
+        return errorResponse(deploymentResult.error.message);
+      }
+
+      return successResponse({ deployment: deploymentResult.value });
     },
   );
 
@@ -315,18 +352,18 @@ export const registerDeploymentTools = (server: McpServer): void => {
       },
     },
     async ({ deploymentId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.deployments.stop({
-          variables: {
-            id: deploymentId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.deployments.stop({
+        variables: {
+          id: deploymentId,
+        },
+      });
 
-        return successResponse({ success: result.deploymentStop });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      return successResponse({ success: result.value.deploymentStop });
     },
   );
 
@@ -343,18 +380,18 @@ export const registerDeploymentTools = (server: McpServer): void => {
       },
     },
     async ({ deploymentId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.deployments.restart({
-          variables: {
-            id: deploymentId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.deployments.restart({
+        variables: {
+          id: deploymentId,
+        },
+      });
 
-        return successResponse({ success: result.deploymentRestart });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      return successResponse({ success: result.value.deploymentRestart });
     },
   );
 
@@ -371,18 +408,18 @@ export const registerDeploymentTools = (server: McpServer): void => {
       },
     },
     async ({ deploymentId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.deployments.cancel({
-          variables: {
-            id: deploymentId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.deployments.cancel({
+        variables: {
+          id: deploymentId,
+        },
+      });
 
-        return successResponse({ success: result.deploymentCancel });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      return successResponse({ success: result.value.deploymentCancel });
     },
   );
 
@@ -399,18 +436,18 @@ export const registerDeploymentTools = (server: McpServer): void => {
       },
     },
     async ({ deploymentId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.deployments.rollback({
-          variables: {
-            id: deploymentId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.deployments.rollback({
+        variables: {
+          id: deploymentId,
+        },
+      });
 
-        return successResponse({ success: result.deploymentRollback });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      return successResponse({ success: result.value.deploymentRollback });
     },
   );
 
@@ -442,6 +479,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
         events: z.object({
           __typename: z.string().optional(),
         }),
+        __typename: z.string().optional(),
       },
     },
     async ({ deploymentId, first, after, last, before }) => {
@@ -449,22 +487,31 @@ export const registerDeploymentTools = (server: McpServer): void => {
         return errorResponse('Provide either first or last, not both.');
       }
 
-      try {
-        const railway = getRailway();
-        const data = await railway.deployments.events({
-          variables: {
-            id: deploymentId,
-            first: first ?? null,
-            after: after ?? null,
-            last: last ?? null,
-            before: before ?? null,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.deployments.events({
+        variables: {
+          id: deploymentId,
+          first: first ?? null,
+          after: after ?? null,
+          last: last ?? null,
+          before: before ?? null,
+        },
+      });
 
-        return successResponse({ events: data.deploymentEvents });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const eventsResult = unwrapField(
+        result,
+        'deploymentEvents',
+        'Deployment not found or events unavailable.',
+      );
+      if (eventsResult.isErr()) {
+        return errorResponse(eventsResult.error.message);
+      }
+
+      return successResponse({ events: eventsResult.value });
     },
   );
 };

@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
+import { unwrapField, unwrapArray } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -49,24 +50,29 @@ export const registerVolumeTools = (server: McpServer): void => {
       },
     },
     async ({ projectId, mountPath, environmentId, serviceId, region }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.volumes.create({
-          variables: {
-            input: {
-              projectId,
-              mountPath,
-              environmentId,
-              serviceId: serviceId ?? null,
-              region: region ?? null,
-            },
+      const railway = getRailway();
+      const result = await railway.volumes.create({
+        variables: {
+          input: {
+            projectId,
+            mountPath,
+            environmentId,
+            serviceId: serviceId ?? null,
+            region: region ?? null,
           },
-        });
+        },
+      });
 
-        return successResponse({ volume: result.volumeCreate });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const volumeResult = unwrapField(result, 'volumeCreate', 'Failed to create volume.');
+      if (volumeResult.isErr()) {
+        return errorResponse(volumeResult.error.message);
+      }
+
+      return successResponse({ volume: volumeResult.value });
     },
   );
 
@@ -79,26 +85,40 @@ export const registerVolumeTools = (server: McpServer): void => {
         volumeInstanceId: volumeInstanceIdSchema,
       },
       outputSchema: {
-        backup: z.object({
-          id: z.string(),
-          name: z.string().nullable(),
-          createdAt: z.string(),
-        }),
+        workflowId: z.string().nullable(),
       },
     },
     async ({ volumeInstanceId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.volumes.instance.backups.create({
-          variables: {
-            volumeInstanceId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.volumes.instance.backups.create({
+        variables: {
+          volumeInstanceId,
+        },
+      });
 
-        return successResponse({ backup: result.volumeInstanceBackupCreate });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const backupResult = unwrapField(
+        result,
+        'volumeInstanceBackupCreate',
+        'Invalid response from Railway: workflow ID not found.',
+      );
+      if (backupResult.isErr()) {
+        return errorResponse(backupResult.error.message);
+      }
+
+      const workflowIdResult = unwrapField(
+        backupResult,
+        'workflowId',
+        'Invalid response from Railway: workflow ID not found.',
+      );
+      if (workflowIdResult.isErr()) {
+        return errorResponse(workflowIdResult.error.message);
+      }
+
+      return successResponse({ workflowId: workflowIdResult.value });
     },
   );
 
@@ -113,29 +133,42 @@ export const registerVolumeTools = (server: McpServer): void => {
       outputSchema: {
         backups: z.array(
           z.object({
+            __typename: z.string().optional(),
             id: z.string(),
             name: z.string().nullable(),
             createdAt: z.string(),
             expiresAt: z.string().nullable(),
             usedMB: z.number().nullable(),
             referencedMB: z.number().nullable(),
+            creatorId: z.string().nullable(),
+            externalId: z.string(),
           }),
         ),
+        __typename: z.string().optional(),
       },
     },
     async ({ volumeInstanceId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.volumes.instance.backups.list({
-          variables: {
-            volumeInstanceId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.volumes.instance.backups.list({
+        variables: {
+          volumeInstanceId,
+        },
+      });
 
-        return successResponse({ backups: result.volumeInstanceBackupList });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const backupsResult = unwrapArray(
+        result,
+        'volumeInstanceBackupList',
+        'Invalid response from Railway: expected array of backups.',
+      );
+      if (backupsResult.isErr()) {
+        return errorResponse(backupsResult.error.message);
+      }
+
+      return successResponse({ backups: backupsResult.value });
     },
   );
 
@@ -156,19 +189,37 @@ export const registerVolumeTools = (server: McpServer): void => {
       },
     },
     async ({ volumeInstanceId, backupId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.volumes.instance.backups.restore({
-          variables: {
-            volumeInstanceId,
-            volumeInstanceBackupId: backupId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.volumes.instance.backups.restore({
+        variables: {
+          volumeInstanceId,
+          volumeInstanceBackupId: backupId,
+        },
+      });
 
-        return successResponse({ workflowId: result.volumeInstanceBackupRestore.workflowId });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const restoreResult = unwrapField(
+        result,
+        'volumeInstanceBackupRestore',
+        'Invalid response from Railway: workflow ID not found.',
+      );
+      if (restoreResult.isErr()) {
+        return errorResponse(restoreResult.error.message);
+      }
+
+      const workflowIdResult = unwrapField(
+        restoreResult,
+        'workflowId',
+        'Invalid response from Railway: workflow ID not found.',
+      );
+      if (workflowIdResult.isErr()) {
+        return errorResponse(workflowIdResult.error.message);
+      }
+
+      return successResponse({ workflowId: workflowIdResult.value });
     },
   );
 };

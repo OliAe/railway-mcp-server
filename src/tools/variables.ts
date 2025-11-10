@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { unwrapField } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
@@ -28,22 +29,29 @@ export const registerVariableTools = (server: McpServer): void => {
       },
     },
     async ({ projectId, environmentId, serviceId }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.variables.serviceDeployment.variables({
-          variables: {
-            projectId,
-            environmentId,
-            serviceId,
-          },
-        });
+      const railway = getRailway();
+      const result = await railway.variables.serviceDeployment.variables({
+        variables: {
+          projectId,
+          environmentId,
+          serviceId,
+        },
+      });
 
-        return successResponse({
-          variables: result.variablesForServiceDeployment,
-        });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      const variablesResult = unwrapField(
+        result,
+        'variablesForServiceDeployment',
+        'Invalid response from Railway: variables not found.',
+      );
+      if (variablesResult.isErr()) {
+        return errorResponse(variablesResult.error.message);
+      }
+
+      return successResponse({ variables: variablesResult.value });
     },
   );
 
@@ -68,25 +76,25 @@ export const registerVariableTools = (server: McpServer): void => {
       },
     },
     async ({ projectId, environmentId, name, value, serviceId, skipDeploys }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.variables.upsert({
-          variables: {
-            input: {
-              projectId,
-              environmentId,
-              name,
-              value,
-              serviceId: serviceId ?? null,
-              skipDeploys: skipDeploys ?? null,
-            },
+      const railway = getRailway();
+      const result = await railway.variables.upsert({
+        variables: {
+          input: {
+            projectId,
+            environmentId,
+            name,
+            value,
+            serviceId: serviceId ?? null,
+            skipDeploys: skipDeploys ?? null,
           },
-        });
+        },
+      });
 
-        return successResponse({ success: result.variableUpsert ?? false });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      return successResponse({ success: result.value.variableUpsert ?? false });
     },
   );
 
@@ -114,25 +122,25 @@ export const registerVariableTools = (server: McpServer): void => {
       },
     },
     async ({ projectId, environmentId, variables, serviceId, replace, skipDeploys }) => {
-      try {
-        const railway = getRailway();
-        const result = await railway.variables.collectionUpsert({
-          variables: {
-            input: {
-              projectId,
-              environmentId,
-              variables,
-              serviceId: serviceId ?? null,
-              replace: replace ?? null,
-              skipDeploys: skipDeploys ?? null,
-            },
+      const railway = getRailway();
+      const result = await railway.variables.collectionUpsert({
+        variables: {
+          input: {
+            projectId,
+            environmentId,
+            variables,
+            serviceId: serviceId ?? null,
+            replace: replace ?? null,
+            skipDeploys: skipDeploys ?? null,
           },
-        });
+        },
+      });
 
-        return successResponse({ success: result.variableCollectionUpsert ?? false });
-      } catch (error) {
-        return errorResponse(toRailwayErrorMessage(error));
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
       }
+
+      return successResponse({ success: result.value.variableCollectionUpsert ?? false });
     },
   );
 };
