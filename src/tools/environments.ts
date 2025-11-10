@@ -149,6 +149,10 @@ export const registerEnvironmentTools = (server: McpServer): void => {
           },
         });
 
+        if (!result.environmentCreate) {
+          return errorResponse('Failed to create environment.');
+        }
+
         return successResponse({ environment: result.environmentCreate });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
@@ -190,6 +194,10 @@ export const registerEnvironmentTools = (server: McpServer): void => {
             },
           },
         });
+
+        if (!result.environmentRename) {
+          return errorResponse('Failed to rename environment.');
+        }
 
         return successResponse({ environment: result.environmentRename });
       } catch (error) {

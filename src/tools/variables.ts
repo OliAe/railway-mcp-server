@@ -83,7 +83,7 @@ export const registerVariableTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse({ success: result.variableUpsert });
+        return successResponse({ success: result.variableUpsert ?? false });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
@@ -129,7 +129,7 @@ export const registerVariableTools = (server: McpServer): void => {
           },
         });
 
-        return successResponse({ success: result.variableCollectionUpsert });
+        return successResponse({ success: result.variableCollectionUpsert ?? false });
       } catch (error) {
         return errorResponse(toRailwayErrorMessage(error));
       }
