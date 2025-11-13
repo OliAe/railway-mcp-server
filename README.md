@@ -62,7 +62,7 @@ Railway supports three types of API tokens, each with different access levels:
 
 ## Available Tools
 
-This MCP server provides **47 tools** for managing Railway infrastructure, organized into the following categories:
+This MCP server provides **48 tools** for managing Railway infrastructure, organized into the following categories:
 
 ### Projects
 
@@ -97,6 +97,7 @@ This MCP server provides **47 tools** for managing Railway infrastructure, organ
 - `railway_environment_create` - Create a new environment (optionally clone from existing)
 - `railway_environment_rename` - Rename an environment
 - `railway_environment_logs` - Fetch environment logs
+- `railway_environment_get_by_name` - Get an environment by its name (useful when environments_list returns empty results)
 
 ### Variables
 
