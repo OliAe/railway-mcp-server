@@ -56,6 +56,31 @@ export const registerTemplateTools = (server: McpServer): void => {
       outputSchema: {
         templates: z.object({
           __typename: z.string().optional(),
+          edges: z.array(
+            z.object({
+              cursor: z.string(),
+              node: z.object({
+                __typename: z.string().optional(),
+                id: z.string(),
+                code: z.string(),
+                name: z.string(),
+                description: z.string().nullable(),
+                category: z.string(),
+                image: z.string().nullable(),
+                activeProjects: z.number(),
+                health: z.number().nullable(),
+                isApproved: z.boolean(),
+                isV2Template: z.boolean(),
+                createdAt: z.string(),
+              }),
+            }),
+          ),
+          pageInfo: z.object({
+            hasNextPage: z.boolean(),
+            hasPreviousPage: z.boolean(),
+            startCursor: z.string().nullable(),
+            endCursor: z.string().nullable(),
+          }),
         }),
       },
     },

@@ -211,6 +211,27 @@ export const registerObservabilityTools = (server: McpServer): void => {
       outputSchema: {
         events: z.object({
           __typename: z.string().optional(),
+          edges: z.array(
+            z.object({
+              cursor: z.string(),
+              node: z.object({
+                __typename: z.string().optional(),
+                id: z.string(),
+                action: z.string(),
+                createdAt: z.string(),
+                severity: z.string().nullable(),
+                environmentId: z.string().nullable(),
+                projectId: z.string(),
+                payload: z.unknown(),
+              }),
+            }),
+          ),
+          pageInfo: z.object({
+            hasNextPage: z.boolean(),
+            hasPreviousPage: z.boolean(),
+            startCursor: z.string().nullable(),
+            endCursor: z.string().nullable(),
+          }),
         }),
       },
     },

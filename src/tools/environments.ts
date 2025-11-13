@@ -16,10 +16,18 @@ const environmentNameSchema = z
   .min(1, 'Environment name is required')
   .describe('Human-readable name for the new environment.');
 
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const environmentIdSchema = z
   .string()
   .min(1, 'Environment ID is required')
-  .describe('The ID of the environment.');
+  .refine(
+    (val) => uuidRegex.test(val),
+    'Environment ID must be a valid UUID. Use railway_environments_list to get the correct environment ID.',
+  )
+  .describe(
+    'The ID (UUID) of the environment. Use railway_environments_list to find available environments.',
+  );
 
 export const registerEnvironmentTools = (server: McpServer): void => {
   server.registerTool(
@@ -49,6 +57,28 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       outputSchema: {
         environments: z.object({
           __typename: z.string().optional(),
+          edges: z.array(
+            z.object({
+              cursor: z.string(),
+              node: z.object({
+                __typename: z.string().optional(),
+                id: z.string(),
+                name: z.string(),
+                projectId: z.string(),
+                isEphemeral: z.boolean(),
+                createdAt: z.string(),
+                updatedAt: z.string(),
+                deletedAt: z.string().nullable(),
+                unmergedChangesCount: z.number().int().nullable(),
+              }),
+            }),
+          ),
+          pageInfo: z.object({
+            hasNextPage: z.boolean(),
+            hasPreviousPage: z.boolean(),
+            startCursor: z.string().nullable(),
+            endCursor: z.string().nullable(),
+          }),
         }),
       },
     },
@@ -299,6 +329,86 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       }
 
       return successResponse({ logs: logsResult.value });
+    },
+  );
+
+  server.registerTool(
+    'railway_environment_get_by_name',
+    {
+      title: 'Get Environment by Name',
+      description:
+        'Get an environment by its name. Useful when environments_list returns empty results. Returns the environment ID (UUID) that can be used with other tools.',
+      inputSchema: {
+        projectId: projectIdSchema,
+        name: environmentNameSchema,
+      },
+      outputSchema: {
+        environment: z
+          .object({
+            __typename: z.string().optional(),
+            id: z.string(),
+            name: z.string(),
+            projectId: z.string(),
+            isEphemeral: z.boolean(),
+            createdAt: z.string(),
+            updatedAt: z.string(),
+            deletedAt: z.string().nullable(),
+            unmergedChangesCount: z.number().int().nullable(),
+          })
+          .nullable(),
+      },
+    },
+    async ({ projectId, name }) => {
+      const railway = getRailway();
+      const listResult = await railway.environments.list({
+        variables: {
+          projectId,
+          isEphemeral: null,
+          first: 100,
+          after: null,
+          last: null,
+          before: null,
+        },
+      });
+
+      if (listResult.isErr()) {
+        return errorResponse(
+          `Failed to list environments: ${toRailwayErrorMessage(listResult.error)}. Try creating the environment first using railway_environment_create.`,
+        );
+      }
+
+      const environmentsResult = unwrapField(
+        listResult,
+        'environments',
+        'Invalid response from Railway: environments not found.',
+      );
+      if (environmentsResult.isErr()) {
+        return errorResponse(
+          `Failed to retrieve environments: ${environmentsResult.error.message}. Try creating the environment first using railway_environment_create.`,
+        );
+      }
+
+      const connection = environmentsResult.value as {
+        edges?: { node: { id: string; name: string } }[];
+      };
+      const env = connection.edges?.find((edge) => edge.node.name === name);
+      if (!env) {
+        return successResponse({ environment: null });
+      }
+
+      const envResult = await railway.environments.get({
+        variables: { id: env.node.id },
+      });
+      if (envResult.isErr()) {
+        return errorResponse(toRailwayErrorMessage(envResult.error));
+      }
+
+      const fullEnv = unwrapField(envResult, 'environment', 'Environment not found.');
+      if (fullEnv.isErr()) {
+        return errorResponse(fullEnv.error.message);
+      }
+
+      return successResponse({ environment: fullEnv.value });
     },
   );
 };

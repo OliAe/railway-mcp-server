@@ -478,8 +478,30 @@ export const registerDeploymentTools = (server: McpServer): void => {
       outputSchema: {
         events: z.object({
           __typename: z.string().optional(),
+          edges: z.array(
+            z.object({
+              cursor: z.string(),
+              node: z.object({
+                __typename: z.string().optional(),
+                id: z.string(),
+                step: z.string(),
+                createdAt: z.string(),
+                completedAt: z.string().nullable(),
+                payload: z
+                  .object({
+                    error: z.string().nullable(),
+                  })
+                  .nullable(),
+              }),
+            }),
+          ),
+          pageInfo: z.object({
+            hasNextPage: z.boolean(),
+            hasPreviousPage: z.boolean(),
+            startCursor: z.string().nullable(),
+            endCursor: z.string().nullable(),
+          }),
         }),
-        __typename: z.string().optional(),
       },
     },
     async ({ deploymentId, first, after, last, before }) => {
