@@ -24,7 +24,7 @@ const deploymentStatusEnum = z.enum(deploymentStatusValues);
 
 const deploymentIdSchema = z
   .string()
-  .min(1, 'Deployment ID is required')
+  .uuid('Deployment ID must be a valid UUID')
   .describe('The ID of the deployment.');
 
 export const registerDeploymentTools = (server: McpServer): void => {
@@ -36,12 +36,16 @@ export const registerDeploymentTools = (server: McpServer): void => {
       inputSchema: {
         projectId: z
           .string()
-          .min(1, 'Project ID is required')
+          .uuid('Project ID must be a valid UUID')
           .describe('Filter deployments by project ID.'),
-        serviceId: z.string().min(1).describe('Filter deployments by service ID.').optional(),
+        serviceId: z
+          .string()
+          .uuid('Service ID must be a valid UUID')
+          .describe('Filter deployments by service ID.')
+          .optional(),
         environmentId: z
           .string()
-          .min(1)
+          .uuid('Environment ID must be a valid UUID')
           .describe('Filter deployments by environment ID.')
           .optional(),
         includeDeleted: z

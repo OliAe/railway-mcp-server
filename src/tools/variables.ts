@@ -4,14 +4,20 @@ import { unwrapField } from '@crisog/railway-sdk';
 import { getRailway, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
 
-const projectIdSchema = z.string().min(1, 'Project ID is required').describe('The project ID.');
+const projectIdSchema = z
+  .string()
+  .uuid('Project ID must be a valid UUID')
+  .describe('The project ID.');
 
 const environmentIdSchema = z
   .string()
-  .min(1, 'Environment ID is required')
+  .uuid('Environment ID must be a valid UUID')
   .describe('The environment ID.');
 
-const serviceIdSchema = z.string().min(1, 'Service ID is required').describe('The service ID.');
+const serviceIdSchema = z
+  .string()
+  .uuid('Service ID must be a valid UUID')
+  .describe('The service ID.');
 
 export const registerVariableTools = (server: McpServer): void => {
   server.registerTool(

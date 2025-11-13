@@ -7,12 +7,12 @@ import { errorResponse, successResponse } from './responses.js';
 
 const projectIdSchema = z
   .string()
-  .min(1, 'Project ID is required')
+  .uuid('Project ID must be a valid UUID')
   .describe('The ID of the project.');
 
 const volumeInstanceIdSchema = z
   .string()
-  .min(1, 'Volume instance ID is required')
+  .uuid('Volume instance ID must be a valid UUID')
   .describe('The ID of the volume instance.');
 
 export const registerVolumeTools = (server: McpServer): void => {
@@ -30,11 +30,12 @@ export const registerVolumeTools = (server: McpServer): void => {
         environmentId: z
           .string()
           .trim()
-          .min(1, 'Environment ID is required')
+          .uuid('Environment ID must be a valid UUID')
           .describe('Environment ID to deploy the volume to.'),
         serviceId: z
           .string()
           .trim()
+          .uuid('Service ID must be a valid UUID')
           .describe('Service ID to attach the volume to (optional, can be mounted later).')
           .optional(),
         region: z.string().trim().describe('Region to create the volume in.').optional(),
@@ -181,7 +182,7 @@ export const registerVolumeTools = (server: McpServer): void => {
         volumeInstanceId: volumeInstanceIdSchema,
         backupId: z
           .string()
-          .min(1, 'Backup ID is required')
+          .uuid('Backup ID must be a valid UUID')
           .describe('The ID of the backup to restore.'),
       },
       outputSchema: {
@@ -231,7 +232,7 @@ export const registerVolumeTools = (server: McpServer): void => {
       inputSchema: {
         environmentId: z
           .string()
-          .min(1, 'Environment ID is required')
+          .uuid('Environment ID must be a valid UUID')
           .describe('The ID of the environment.'),
       },
       outputSchema: {

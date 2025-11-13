@@ -7,17 +7,17 @@ import { errorResponse, successResponse } from './responses.js';
 
 const serviceIdSchema = z
   .string()
-  .min(1, 'Service ID is required')
+  .uuid('Service ID must be a valid UUID')
   .describe('The ID of the service to attach the domain to.');
 
 const environmentIdSchema = z
   .string()
-  .min(1, 'Environment ID is required')
+  .uuid('Environment ID must be a valid UUID')
   .describe('The environment where the domain will be generated.');
 
 const projectIdSchema = z
   .string()
-  .min(1, 'Project ID is required')
+  .uuid('Project ID must be a valid UUID')
   .describe('The ID of the project.');
 
 export const registerDomainTools = (server: McpServer): void => {

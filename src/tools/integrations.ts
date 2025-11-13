@@ -7,7 +7,7 @@ import { errorResponse, successResponse } from './responses.js';
 
 const projectIdSchema = z
   .string()
-  .min(1, 'Project ID is required')
+  .uuid('Project ID must be a valid UUID')
   .describe('The ID of the project.');
 
 export const registerIntegrationTools = (server: McpServer): void => {

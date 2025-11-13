@@ -7,12 +7,12 @@ import { errorResponse, successResponse } from './responses.js';
 
 const deploymentIdSchema = z
   .string()
-  .min(1, 'Deployment ID is required')
+  .uuid('Deployment ID must be a valid UUID')
   .describe('The ID of the deployment.');
 
 const projectIdSchema = z
   .string()
-  .min(1, 'Project ID is required')
+  .uuid('Project ID must be a valid UUID')
   .describe('The ID of the project.');
 
 export const registerObservabilityTools = (server: McpServer): void => {
@@ -190,7 +190,12 @@ export const registerObservabilityTools = (server: McpServer): void => {
       description: 'Retrieve system events for a project.',
       inputSchema: {
         projectId: projectIdSchema,
-        environmentId: z.string().trim().describe('Filter by environment ID.').optional(),
+        environmentId: z
+          .string()
+          .trim()
+          .uuid('Environment ID must be a valid UUID')
+          .describe('Filter by environment ID.')
+          .optional(),
         first: z
           .number()
           .int()

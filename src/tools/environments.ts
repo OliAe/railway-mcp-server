@@ -7,7 +7,7 @@ import { errorResponse, successResponse } from './responses.js';
 
 const projectIdSchema = z
   .string()
-  .min(1, 'Project ID is required')
+  .uuid('Project ID must be a valid UUID')
   .describe('The ID of the project that will own the environment.');
 
 const environmentNameSchema = z
@@ -16,13 +16,9 @@ const environmentNameSchema = z
   .min(1, 'Environment name is required')
   .describe('Human-readable name for the new environment.');
 
-const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 const environmentIdSchema = z
   .string()
-  .min(1, 'Environment ID is required')
-  .refine(
-    (val) => uuidRegex.test(val),
+  .uuid(
     'Environment ID must be a valid UUID. Use railway_environments_list to get the correct environment ID.',
   )
   .describe(
@@ -128,7 +124,7 @@ export const registerEnvironmentTools = (server: McpServer): void => {
         sourceEnvironmentId: z
           .string()
           .trim()
-          .min(1)
+          .uuid('Source environment ID must be a valid UUID')
           .describe('Environment ID to copy configuration from.')
           .optional(),
         ephemeral: z
@@ -354,6 +350,26 @@ export const registerEnvironmentTools = (server: McpServer): void => {
             updatedAt: z.string(),
             deletedAt: z.string().nullable(),
             unmergedChangesCount: z.number().int().nullable(),
+            volumeInstances: z.object({
+              edges: z.array(
+                z.object({
+                  node: z.object({
+                    __typename: z.string().optional(),
+                    id: z.string(),
+                    environmentId: z.string(),
+                    volumeId: z.string(),
+                    mountPath: z.string(),
+                    state: z.string(),
+                    createdAt: z.string(),
+                    currentSizeMB: z.number().nullable(),
+                    sizeMB: z.number().nullable(),
+                    region: z.string().nullable(),
+                    serviceId: z.string().nullable(),
+                    externalId: z.string().nullable(),
+                  }),
+                }),
+              ),
+            }),
           })
           .nullable(),
       },

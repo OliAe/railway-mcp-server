@@ -6,12 +6,12 @@ import { errorResponse, successResponse } from './responses.js';
 
 const serviceIdSchema = z
   .string()
-  .min(1, 'Service ID is required')
+  .uuid('Service ID must be a valid UUID')
   .describe('The ID of the service.');
 
 const environmentIdSchema = z
   .string()
-  .min(1, 'Environment ID is required')
+  .uuid('Environment ID must be a valid UUID')
   .describe('The ID of the environment.');
 
 export const registerServiceTools = (server: McpServer): void => {
@@ -21,7 +21,10 @@ export const registerServiceTools = (server: McpServer): void => {
       title: 'List Services',
       description: 'List all services in a project.',
       inputSchema: {
-        projectId: z.string().min(1, 'Project ID is required').describe('The ID of the project.'),
+        projectId: z
+          .string()
+          .uuid('Project ID must be a valid UUID')
+          .describe('The ID of the project.'),
         first: z
           .number()
           .int()
@@ -253,11 +256,14 @@ export const registerServiceTools = (server: McpServer): void => {
       title: 'Create Service',
       description: 'Create a new service in a project.',
       inputSchema: {
-        projectId: z.string().min(1, 'Project ID is required').describe('The ID of the project.'),
+        projectId: z
+          .string()
+          .uuid('Project ID must be a valid UUID')
+          .describe('The ID of the project.'),
         environmentId: z
           .string()
           .trim()
-          .min(1, 'Environment ID is required')
+          .uuid('Environment ID must be a valid UUID')
           .describe('Environment ID where the service will be created.'),
         name: z.string().trim().min(1).describe('Name for the service.').optional(),
         icon: z.string().trim().describe('Icon URL for the service.').optional(),

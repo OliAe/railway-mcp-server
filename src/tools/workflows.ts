@@ -13,7 +13,11 @@ export const registerWorkflowTools = (server: McpServer): void => {
       description:
         'Check the status of an asynchronous Railway workflow (e.g., template deployments).',
       inputSchema: {
-        workflowId: z.string().trim().min(1).describe('Workflow ID to look up.'),
+        workflowId: z
+          .string()
+          .trim()
+          .min(1, 'Workflow ID is required')
+          .describe('Workflow ID to look up (e.g., "deployTemplate/project/{projectId}/{id}").'),
       },
       outputSchema: {
         workflow: z.object({

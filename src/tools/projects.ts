@@ -6,7 +6,7 @@ import { errorResponse, successResponse } from './responses.js';
 
 const projectIdSchema = z
   .string()
-  .min(1, 'Project ID is required')
+  .uuid('Project ID must be a valid UUID')
   .describe('The ID of the project.');
 
 export const registerProjectTools = (server: McpServer): void => {
@@ -16,8 +16,16 @@ export const registerProjectTools = (server: McpServer): void => {
       title: 'List Projects',
       description: 'Gets all projects for a user or workspace.',
       inputSchema: {
-        userId: z.string().min(1).describe('Filter projects by user ID.').optional(),
-        workspaceId: z.string().min(1).describe('Filter projects by workspace ID.').optional(),
+        userId: z
+          .string()
+          .uuid('User ID must be a valid UUID')
+          .describe('Filter projects by user ID.')
+          .optional(),
+        workspaceId: z
+          .string()
+          .uuid('Workspace ID must be a valid UUID')
+          .describe('Filter projects by workspace ID.')
+          .optional(),
         includeDeleted: z.boolean().describe('Include deleted projects.').optional(),
         first: z
           .number()
@@ -112,7 +120,7 @@ export const registerProjectTools = (server: McpServer): void => {
         workspaceId: z
           .string()
           .trim()
-          .min(1)
+          .uuid('Workspace ID must be a valid UUID')
           .describe('Workspace ID to create the project in.')
           .optional(),
         description: z.string().trim().describe('Optional description for the project.').optional(),

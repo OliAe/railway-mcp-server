@@ -162,7 +162,12 @@ export const registerTemplateTools = (server: McpServer): void => {
       description:
         'Deploy a template into a project or workspace. Provide templateId and serializedConfig, or identify the template to resolve them automatically.',
       inputSchema: {
-        templateId: z.string().trim().min(1).describe('ID of the template to deploy.').optional(),
+        templateId: z
+          .string()
+          .trim()
+          .uuid('Template ID must be a valid UUID')
+          .describe('ID of the template to deploy.')
+          .optional(),
         code: z.string().trim().min(1).describe('Template code (slug).').optional(),
         owner: z.string().trim().min(1).describe('GitHub owner for the template.').optional(),
         repo: z.string().trim().min(1).describe('GitHub repo for the template.').optional(),
@@ -173,19 +178,19 @@ export const registerTemplateTools = (server: McpServer): void => {
         projectId: z
           .string()
           .trim()
-          .min(1)
+          .uuid('Project ID must be a valid UUID')
           .describe('Project ID to deploy into. Provide this or a workspaceId.')
           .optional(),
         environmentId: z
           .string()
           .trim()
-          .min(1)
+          .uuid('Environment ID must be a valid UUID')
           .describe('Optional environment ID to target.')
           .optional(),
         workspaceId: z
           .string()
           .trim()
-          .min(1)
+          .uuid('Workspace ID must be a valid UUID')
           .describe('Workspace ID when creating a project from the template.')
           .optional(),
       },
