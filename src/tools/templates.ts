@@ -103,7 +103,10 @@ export const registerTemplateTools = (server: McpServer): void => {
         return errorResponse(templatesResult.error.message);
       }
 
-      return successResponse({ templates: templatesResult.value });
+      return successResponse({
+        templates: templatesResult.value,
+        pageInfo: templatesResult.value.pageInfo,
+      });
     },
   );
 

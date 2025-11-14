@@ -264,7 +264,10 @@ export const registerObservabilityTools = (server: McpServer): void => {
         return errorResponse(eventsResult.error.message);
       }
 
-      return successResponse({ events: eventsResult.value });
+      return successResponse({
+        events: eventsResult.value,
+        pageInfo: eventsResult.value.pageInfo,
+      });
     },
   );
 };

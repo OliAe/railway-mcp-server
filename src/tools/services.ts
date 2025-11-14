@@ -87,14 +87,17 @@ export const registerServiceTools = (server: McpServer): void => {
 
       const servicesResult = unwrapNested(
         result,
-        ['project', 'services'],
+        ['project', 'services'] as const,
         'Invalid response from Railway: services not found.',
       );
       if (servicesResult.isErr()) {
         return errorResponse(servicesResult.error.message);
       }
 
-      return successResponse({ services: servicesResult.value });
+      return successResponse({
+        services: servicesResult.value,
+        pageInfo: servicesResult.value.pageInfo,
+      });
     },
   );
 

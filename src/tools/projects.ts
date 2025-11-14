@@ -97,7 +97,10 @@ export const registerProjectTools = (server: McpServer): void => {
         return errorResponse(projectsResult.error.message);
       }
 
-      return successResponse({ projects: projectsResult.value });
+      return successResponse({
+        projects: projectsResult.value,
+        pageInfo: projectsResult.value.pageInfo,
+      });
     },
   );
 

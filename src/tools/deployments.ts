@@ -163,7 +163,10 @@ export const registerDeploymentTools = (server: McpServer): void => {
         return errorResponse(deploymentsResult.error.message);
       }
 
-      return successResponse({ deployments: deploymentsResult.value });
+      return successResponse({
+        deployments: deploymentsResult.value,
+        pageInfo: deploymentsResult.value.pageInfo,
+      });
     },
   );
 

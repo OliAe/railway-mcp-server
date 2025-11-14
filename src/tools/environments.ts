@@ -101,7 +101,10 @@ export const registerEnvironmentTools = (server: McpServer): void => {
         return errorResponse(environmentsResult.error.message);
       }
 
-      return successResponse({ environments: environmentsResult.value });
+      return successResponse({
+        environments: environmentsResult.value,
+        pageInfo: environmentsResult.value.pageInfo,
+      });
     },
   );
 
