@@ -23,6 +23,39 @@ This will add the following configuration to your Cursor settings:
 }
 ```
 
+## Authentication
+
+### Getting Your Railway API Token
+
+1. Go to [Railway Settings](https://railway.app/account/tokens)
+2. Create a new API token:
+   - **Account Token**: Full access to all workspaces and projects
+   - **Workspace Token**: Access to a specific workspace and its projects
+   - **Project Token**: Access to a specific project environment
+3. Copy the token (you'll only see it once!)
+
+- **Use the minimum required scope** - Prefer Workspace or Project tokens over Account tokens when possible
+
+### Configuring the Token
+
+Add your Railway API token to the MCP server configuration in `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "railway-mcp-server": {
+      "command": "npx",
+      "args": ["-y", "@crisog/railway-mcp-server"],
+      "env": {
+        "RAILWAY_API_TOKEN": "<YOUR_RAILWAY_API_TOKEN>"
+      }
+    }
+  }
+}
+```
+
+**Important**: Replace `<YOUR_RAILWAY_API_TOKEN>` with your actual token. After updating the configuration, restart Cursor for the changes to take effect.
+
 ## Token Types & Scope
 
 Railway supports three types of API tokens, each with different access levels:
