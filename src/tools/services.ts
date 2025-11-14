@@ -315,4 +315,147 @@ export const registerServiceTools = (server: McpServer): void => {
       return successResponse({ service: serviceResult.value });
     },
   );
+
+  server.registerTool(
+    'railway_service_instance_build_command_update',
+    {
+      title: 'Update Service Instance Build Command',
+      description:
+        'Update the build command for a service instance. Warning: Changes will only take effect on the next deployment. After updating this setting, you must trigger a new deployment using railway_service_deploy_latest to apply the changes.',
+      inputSchema: {
+        serviceId: serviceIdSchema,
+        environmentId: environmentIdSchema,
+        buildCommand: z
+          .string()
+          .trim()
+          .min(1, 'Build command cannot be empty.')
+          .describe('Command to run during the build phase.'),
+      },
+      outputSchema: {
+        success: z.boolean(),
+      },
+    },
+    async ({ serviceId, environmentId, buildCommand }) => {
+      const railway = getRailway();
+      const result = await railway.services.instances.update({
+        variables: {
+          serviceId,
+          environmentId,
+          input: {
+            buildCommand,
+          },
+        },
+      });
+
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
+      }
+
+      const updateResult = unwrapField(
+        result,
+        'serviceInstanceUpdate',
+        'Service instance not found or update failed.',
+      );
+      if (updateResult.isErr()) {
+        return errorResponse(updateResult.error.message);
+      }
+
+      return successResponse({ success: updateResult.value });
+    },
+  );
+
+  server.registerTool(
+    'railway_service_instance_start_command_update',
+    {
+      title: 'Update Service Instance Start Command',
+      description:
+        'Update the start command for a service instance. Warning: Changes will only take effect on the next deployment. After updating this setting, you must trigger a new deployment using railway_service_deploy_latest to apply the changes.',
+      inputSchema: {
+        serviceId: serviceIdSchema,
+        environmentId: environmentIdSchema,
+        startCommand: z
+          .string()
+          .trim()
+          .min(1, 'Start command cannot be empty.')
+          .describe('Command to run when starting the service.'),
+      },
+      outputSchema: {
+        success: z.boolean(),
+      },
+    },
+    async ({ serviceId, environmentId, startCommand }) => {
+      const railway = getRailway();
+      const result = await railway.services.instances.update({
+        variables: {
+          serviceId,
+          environmentId,
+          input: {
+            startCommand,
+          },
+        },
+      });
+
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
+      }
+
+      const updateResult = unwrapField(
+        result,
+        'serviceInstanceUpdate',
+        'Service instance not found or update failed.',
+      );
+      if (updateResult.isErr()) {
+        return errorResponse(updateResult.error.message);
+      }
+
+      return successResponse({ success: updateResult.value });
+    },
+  );
+
+  server.registerTool(
+    'railway_service_instance_predeploy_commands_update',
+    {
+      title: 'Update Service Instance Pre-deploy Commands',
+      description:
+        'Update the pre-deploy commands for a service instance. Warning: Changes will only take effect on the next deployment. After updating this setting, you must trigger a new deployment using railway_service_deploy_latest to apply the changes.',
+      inputSchema: {
+        serviceId: serviceIdSchema,
+        environmentId: environmentIdSchema,
+        preDeployCommand: z
+          .array(z.string().trim().min(1))
+          .min(1, 'At least one pre-deploy command is required.')
+          .describe('Commands to run before deployment.'),
+      },
+      outputSchema: {
+        success: z.boolean(),
+      },
+    },
+    async ({ serviceId, environmentId, preDeployCommand }) => {
+      const railway = getRailway();
+      const result = await railway.services.instances.update({
+        variables: {
+          serviceId,
+          environmentId,
+          input: {
+            preDeployCommand,
+          },
+        },
+      });
+
+      if (result.isErr()) {
+        return errorResponse(toRailwayErrorMessage(result.error));
+      }
+
+      const updateResult = unwrapField(
+        result,
+        'serviceInstanceUpdate',
+        'Service instance not found or update failed.',
+      );
+      if (updateResult.isErr()) {
+        return errorResponse(updateResult.error.message);
+      }
+
+      return successResponse({ success: updateResult.value });
+    },
+  );
 };

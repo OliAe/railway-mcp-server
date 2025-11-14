@@ -62,7 +62,7 @@ Railway supports three types of API tokens, each with different access levels:
 
 ## Available Tools
 
-This MCP server provides **48 tools** for managing Railway infrastructure, organized into the following categories:
+This MCP server provides **51 tools** for managing Railway infrastructure, organized into the following categories:
 
 ### Projects
 
@@ -78,6 +78,9 @@ This MCP server provides **48 tools** for managing Railway infrastructure, organ
 - `railway_service_create` - Create a new service in a project
 - `railway_service_update` - Update service metadata (name, icon)
 - `railway_service_deploy_latest` - Deploy service using latest commit or specific commit
+- `railway_service_instance_build_command_update` - Update the build command for a service instance (advanced; can change how your service builds)
+- `railway_service_instance_start_command_update` - Update the start command for a service instance (advanced; can change how your service runs)
+- `railway_service_instance_predeploy_commands_update` - Update pre-deploy commands for a service instance (advanced; runs before each deployment)
 
 ### Deployments
 
