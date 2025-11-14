@@ -90,8 +90,8 @@ export const registerVariableTools = (server: McpServer): void => {
             environmentId,
             name,
             value,
-            serviceId: serviceId ?? null,
-            skipDeploys: skipDeploys ?? null,
+            serviceId,
+            skipDeploys,
           },
         },
       });
@@ -135,9 +135,9 @@ export const registerVariableTools = (server: McpServer): void => {
             projectId,
             environmentId,
             variables,
-            serviceId: serviceId ?? null,
-            replace: replace ?? null,
-            skipDeploys: skipDeploys ?? null,
+            serviceId,
+            replace,
+            skipDeploys,
           },
         },
       });

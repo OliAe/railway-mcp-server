@@ -95,15 +95,15 @@ export const registerObservabilityTools = (server: McpServer): void => {
       const result = await railway.observability.logs.http({
         variables: {
           deploymentId,
-          limit: limit ?? null,
-          filter: filter ?? null,
-          startDate: startDate ?? null,
-          endDate: endDate ?? null,
-          afterLimit: afterLimit ?? null,
-          beforeLimit: beforeLimit ?? null,
-          afterDate: afterDate ?? null,
-          beforeDate: beforeDate ?? null,
-          anchorDate: anchorDate ?? null,
+          limit,
+          filter,
+          startDate,
+          endDate,
+          afterLimit,
+          beforeLimit,
+          afterDate,
+          beforeDate,
+          anchorDate,
         },
       });
 
@@ -159,10 +159,10 @@ export const registerObservabilityTools = (server: McpServer): void => {
       const result = await railway.observability.logs.build({
         variables: {
           deploymentId,
-          limit: limit ?? null,
-          filter: filter ?? null,
-          startDate: startDate ?? null,
-          endDate: endDate ?? null,
+          limit,
+          filter,
+          startDate,
+          endDate,
         },
       });
 
@@ -214,29 +214,23 @@ export const registerObservabilityTools = (server: McpServer): void => {
         before: z.string().describe('Cursor for the previous page.').optional(),
       },
       outputSchema: {
-        events: z.object({
-          __typename: z.string().optional(),
-          edges: z.array(
-            z.object({
-              cursor: z.string(),
-              node: z.object({
-                __typename: z.string().optional(),
-                id: z.string(),
-                action: z.string(),
-                createdAt: z.string(),
-                severity: z.string().nullable(),
-                environmentId: z.string().nullable(),
-                projectId: z.string(),
-                payload: z.unknown(),
-              }),
-            }),
-          ),
-          pageInfo: z.object({
-            hasNextPage: z.boolean(),
-            hasPreviousPage: z.boolean(),
-            startCursor: z.string().nullable(),
-            endCursor: z.string().nullable(),
+        events: z.array(
+          z.object({
+            __typename: z.string().optional(),
+            id: z.string(),
+            action: z.string(),
+            createdAt: z.string(),
+            severity: z.string().nullable(),
+            environmentId: z.string().nullable(),
+            projectId: z.string(),
+            payload: z.unknown(),
           }),
+        ),
+        pageInfo: z.object({
+          hasNextPage: z.boolean(),
+          hasPreviousPage: z.boolean(),
+          startCursor: z.string().nullable(),
+          endCursor: z.string().nullable(),
         }),
       },
     },
@@ -249,12 +243,11 @@ export const registerObservabilityTools = (server: McpServer): void => {
       const result = await railway.observability.events({
         variables: {
           projectId,
-          environmentId: environmentId ?? null,
-          filter: null,
-          first: first ?? null,
-          after: after ?? null,
-          last: last ?? null,
-          before: before ?? null,
+          environmentId,
+          first,
+          after,
+          last,
+          before,
         },
       });
 

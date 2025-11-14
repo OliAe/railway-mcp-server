@@ -45,29 +45,24 @@ export const registerProjectTools = (server: McpServer): void => {
         before: z.string().describe('Cursor for the previous page.').optional(),
       },
       outputSchema: {
-        projects: z.object({
-          __typename: z.string().optional(),
-          edges: z.array(
-            z.object({
-              cursor: z.string(),
-              node: z.object({
-                id: z.string(),
-                name: z.string(),
-                description: z.string().nullable(),
-                createdAt: z.string(),
-                updatedAt: z.string(),
-                isPublic: z.boolean(),
-                isTempProject: z.boolean(),
-                teamId: z.string().nullable(),
-              }),
-            }),
-          ),
-          pageInfo: z.object({
-            hasNextPage: z.boolean(),
-            hasPreviousPage: z.boolean(),
-            startCursor: z.string().nullable(),
-            endCursor: z.string().nullable(),
+        projects: z.array(
+          z.object({
+            __typename: z.string().optional(),
+            id: z.string(),
+            name: z.string(),
+            description: z.string().nullable(),
+            createdAt: z.string(),
+            updatedAt: z.string(),
+            isPublic: z.boolean(),
+            isTempProject: z.boolean(),
+            teamId: z.string().nullable(),
           }),
+        ),
+        pageInfo: z.object({
+          hasNextPage: z.boolean(),
+          hasPreviousPage: z.boolean(),
+          startCursor: z.string().nullable(),
+          endCursor: z.string().nullable(),
         }),
       },
     },
@@ -79,13 +74,13 @@ export const registerProjectTools = (server: McpServer): void => {
       const railway = getRailway();
       const result = await railway.projects.list({
         variables: {
-          userId: userId ?? null,
-          workspaceId: workspaceId ?? null,
-          includeDeleted: includeDeleted ?? null,
-          first: first ?? null,
-          after: after ?? null,
-          last: last ?? null,
-          before: before ?? null,
+          userId,
+          workspaceId,
+          includeDeleted,
+          first,
+          after,
+          last,
+          before,
         },
       });
 
@@ -207,15 +202,12 @@ export const registerProjectTools = (server: McpServer): void => {
       const result = await railway.projects.create({
         variables: {
           input: {
-            isMonorepo: false,
-            repo: null,
-            runtime: null,
             name,
-            workspaceId: workspaceId ?? null,
-            description: description ?? null,
-            isPublic: isPublic ?? null,
-            prDeploys: prDeploys ?? null,
-            defaultEnvironmentName: defaultEnvironmentName ?? null,
+            workspaceId,
+            description,
+            isPublic,
+            prDeploys,
+            defaultEnvironmentName,
           },
         },
       });

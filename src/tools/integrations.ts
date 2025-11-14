@@ -127,7 +127,7 @@ export const registerIntegrationTools = (server: McpServer): void => {
           input: {
             projectId,
             repo,
-            branch: branch ?? null,
+            branch,
           },
         },
       });

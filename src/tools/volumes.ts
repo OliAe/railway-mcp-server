@@ -58,8 +58,8 @@ export const registerVolumeTools = (server: McpServer): void => {
             projectId,
             mountPath,
             environmentId,
-            serviceId: serviceId ?? null,
-            region: region ?? null,
+            serviceId,
+            region,
           },
         },
       });

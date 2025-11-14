@@ -80,40 +80,34 @@ export const registerDeploymentTools = (server: McpServer): void => {
         before: z.string().describe('Cursor for the previous page.').optional(),
       },
       outputSchema: {
-        deployments: z.object({
-          __typename: z.string().optional(),
-          edges: z.array(
-            z.object({
-              cursor: z.string(),
-              node: z.object({
+        deployments: z.array(
+          z.object({
+            __typename: z.string().optional(),
+            id: z.string(),
+            status: z.string(),
+            createdAt: z.string(),
+            updatedAt: z.string(),
+            projectId: z.string(),
+            serviceId: z.string().nullable(),
+            environmentId: z.string(),
+            url: z.string().nullable(),
+            staticUrl: z.string().nullable(),
+            canRedeploy: z.boolean(),
+            canRollback: z.boolean(),
+            service: z
+              .object({
                 __typename: z.string().optional(),
                 id: z.string(),
-                status: z.string(),
-                createdAt: z.string(),
-                updatedAt: z.string(),
-                projectId: z.string(),
-                serviceId: z.string().nullable(),
-                environmentId: z.string(),
-                url: z.string().nullable(),
-                staticUrl: z.string().nullable(),
-                canRedeploy: z.boolean(),
-                canRollback: z.boolean(),
-                service: z
-                  .object({
-                    __typename: z.string().optional(),
-                    id: z.string(),
-                    name: z.string(),
-                  })
-                  .nullable(),
-              }),
-            }),
-          ),
-          pageInfo: z.object({
-            hasNextPage: z.boolean(),
-            hasPreviousPage: z.boolean(),
-            startCursor: z.string().nullable(),
-            endCursor: z.string().nullable(),
+                name: z.string(),
+              })
+              .nullable(),
           }),
+        ),
+        pageInfo: z.object({
+          hasNextPage: z.boolean(),
+          hasPreviousPage: z.boolean(),
+          startCursor: z.string().nullable(),
+          endCursor: z.string().nullable(),
         }),
       },
     },
@@ -138,21 +132,21 @@ export const registerDeploymentTools = (server: McpServer): void => {
         variables: {
           input: {
             projectId,
-            serviceId: serviceId ?? null,
-            environmentId: environmentId ?? null,
-            includeDeleted: includeDeleted ?? null,
+            serviceId,
+            environmentId,
+            includeDeleted,
             status:
               statusIn || statusNotIn
                 ? {
-                    in: statusIn ?? null,
-                    notIn: statusNotIn ?? null,
+                    in: statusIn,
+                    notIn: statusNotIn,
                   }
-                : null,
+                : undefined,
           },
-          first: first ?? null,
-          after: after ?? null,
-          last: last ?? null,
-          before: before ?? null,
+          first,
+          after,
+          last,
+          before,
         },
       });
 
@@ -259,10 +253,10 @@ export const registerDeploymentTools = (server: McpServer): void => {
       const result = await railway.deployments.logs({
         variables: {
           deploymentId,
-          limit: limit ?? null,
-          filter: filter ?? null,
-          startDate: startDate ?? null,
-          endDate: endDate ?? null,
+          limit,
+          filter,
+          startDate,
+          endDate,
         },
       });
 
@@ -322,7 +316,7 @@ export const registerDeploymentTools = (server: McpServer): void => {
       const result = await railway.deployments.redeploy({
         variables: {
           id: deploymentId,
-          usePreviousImageTag: usePreviousImageTag ?? null,
+          usePreviousImageTag,
         },
       });
 
@@ -480,31 +474,25 @@ export const registerDeploymentTools = (server: McpServer): void => {
         before: z.string().describe('Cursor for the previous page.').optional(),
       },
       outputSchema: {
-        events: z.object({
-          __typename: z.string().optional(),
-          edges: z.array(
-            z.object({
-              cursor: z.string(),
-              node: z.object({
-                __typename: z.string().optional(),
-                id: z.string(),
-                step: z.string(),
-                createdAt: z.string(),
-                completedAt: z.string().nullable(),
-                payload: z
-                  .object({
-                    error: z.string().nullable(),
-                  })
-                  .nullable(),
-              }),
-            }),
-          ),
-          pageInfo: z.object({
-            hasNextPage: z.boolean(),
-            hasPreviousPage: z.boolean(),
-            startCursor: z.string().nullable(),
-            endCursor: z.string().nullable(),
+        events: z.array(
+          z.object({
+            __typename: z.string().optional(),
+            id: z.string(),
+            step: z.string(),
+            createdAt: z.string(),
+            completedAt: z.string().nullable(),
+            payload: z
+              .object({
+                error: z.string().nullable(),
+              })
+              .nullable(),
           }),
+        ),
+        pageInfo: z.object({
+          hasNextPage: z.boolean(),
+          hasPreviousPage: z.boolean(),
+          startCursor: z.string().nullable(),
+          endCursor: z.string().nullable(),
         }),
       },
     },
@@ -517,10 +505,10 @@ export const registerDeploymentTools = (server: McpServer): void => {
       const result = await railway.deployments.events({
         variables: {
           id: deploymentId,
-          first: first ?? null,
-          after: after ?? null,
-          last: last ?? null,
-          before: before ?? null,
+          first,
+          after,
+          last,
+          before,
         },
       });
 

@@ -60,7 +60,7 @@ export const registerDomainTools = (server: McpServer): void => {
           input: {
             serviceId,
             environmentId,
-            targetPort: targetPort ?? null,
+            targetPort,
           },
         },
       });
@@ -164,7 +164,7 @@ export const registerDomainTools = (server: McpServer): void => {
             environmentId,
             serviceId,
             domain,
-            targetPort: targetPort ?? null,
+            targetPort,
           },
         },
       });

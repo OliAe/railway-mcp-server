@@ -54,33 +54,27 @@ export const registerTemplateTools = (server: McpServer): void => {
         recommended: z.boolean().describe('Only include recommended templates.').optional(),
       },
       outputSchema: {
-        templates: z.object({
-          __typename: z.string().optional(),
-          edges: z.array(
-            z.object({
-              cursor: z.string(),
-              node: z.object({
-                __typename: z.string().optional(),
-                id: z.string(),
-                code: z.string(),
-                name: z.string(),
-                description: z.string().nullable(),
-                category: z.string(),
-                image: z.string().nullable(),
-                activeProjects: z.number(),
-                health: z.number().nullable(),
-                isApproved: z.boolean(),
-                isV2Template: z.boolean(),
-                createdAt: z.string(),
-              }),
-            }),
-          ),
-          pageInfo: z.object({
-            hasNextPage: z.boolean(),
-            hasPreviousPage: z.boolean(),
-            startCursor: z.string().nullable(),
-            endCursor: z.string().nullable(),
+        templates: z.array(
+          z.object({
+            __typename: z.string().optional(),
+            id: z.string(),
+            code: z.string(),
+            name: z.string(),
+            description: z.string().nullable(),
+            category: z.string(),
+            image: z.string().nullable(),
+            activeProjects: z.number(),
+            health: z.number().nullable(),
+            isApproved: z.boolean(),
+            isV2Template: z.boolean(),
+            createdAt: z.string(),
           }),
+        ),
+        pageInfo: z.object({
+          hasNextPage: z.boolean(),
+          hasPreviousPage: z.boolean(),
+          startCursor: z.string().nullable(),
+          endCursor: z.string().nullable(),
         }),
       },
     },
@@ -92,11 +86,11 @@ export const registerTemplateTools = (server: McpServer): void => {
       const railway = getRailway();
       const result = await railway.templates.list({
         variables: {
-          first: first ?? null,
-          last: last ?? null,
-          after: after ?? null,
-          before: before ?? null,
-          recommended: recommended ?? null,
+          first,
+          last,
+          after,
+          before,
+          recommended,
         },
       });
 
@@ -136,9 +130,9 @@ export const registerTemplateTools = (server: McpServer): void => {
       const railway = getRailway();
       const result = await railway.templates.get({
         variables: {
-          code: code ?? null,
-          owner: owner ?? null,
-          repo: repo ?? null,
+          code,
+          owner,
+          repo,
         },
       });
 
@@ -246,9 +240,9 @@ export const registerTemplateTools = (server: McpServer): void => {
       if (needsLookup) {
         const lookup = await railway.templates.get({
           variables: {
-            code: code ?? null,
-            owner: owner ?? null,
-            repo: repo ?? null,
+            code,
+            owner,
+            repo,
           },
         });
 
@@ -287,9 +281,9 @@ export const registerTemplateTools = (server: McpServer): void => {
           input: {
             templateId: resolvedTemplateId,
             serializedConfig: resolvedConfig,
-            projectId: projectId ?? null,
-            environmentId: environmentId ?? null,
-            workspaceId: workspaceId ?? null,
+            projectId,
+            environmentId,
+            workspaceId,
           },
         },
       });

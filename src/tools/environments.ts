@@ -51,30 +51,24 @@ export const registerEnvironmentTools = (server: McpServer): void => {
         before: z.string().describe('Cursor for the previous page.').optional(),
       },
       outputSchema: {
-        environments: z.object({
-          __typename: z.string().optional(),
-          edges: z.array(
-            z.object({
-              cursor: z.string(),
-              node: z.object({
-                __typename: z.string().optional(),
-                id: z.string(),
-                name: z.string(),
-                projectId: z.string(),
-                isEphemeral: z.boolean(),
-                createdAt: z.string(),
-                updatedAt: z.string(),
-                deletedAt: z.string().nullable(),
-                unmergedChangesCount: z.number().int().nullable(),
-              }),
-            }),
-          ),
-          pageInfo: z.object({
-            hasNextPage: z.boolean(),
-            hasPreviousPage: z.boolean(),
-            startCursor: z.string().nullable(),
-            endCursor: z.string().nullable(),
+        environments: z.array(
+          z.object({
+            __typename: z.string().optional(),
+            id: z.string(),
+            name: z.string(),
+            projectId: z.string(),
+            isEphemeral: z.boolean(),
+            createdAt: z.string(),
+            updatedAt: z.string(),
+            deletedAt: z.string().nullable(),
+            unmergedChangesCount: z.number().int().nullable(),
           }),
+        ),
+        pageInfo: z.object({
+          hasNextPage: z.boolean(),
+          hasPreviousPage: z.boolean(),
+          startCursor: z.string().nullable(),
+          endCursor: z.string().nullable(),
         }),
       },
     },
@@ -87,11 +81,10 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       const result = await railway.environments.list({
         variables: {
           projectId,
-          isEphemeral: null,
-          first: first ?? null,
-          after: after ?? null,
-          last: last ?? null,
-          before: before ?? null,
+          first,
+          after,
+          last,
+          before,
         },
       });
 
@@ -175,11 +168,11 @@ export const registerEnvironmentTools = (server: McpServer): void => {
           input: {
             projectId,
             name,
-            sourceEnvironmentId: sourceEnvironmentId ?? null,
-            ephemeral: ephemeral ?? null,
-            stageInitialChanges: stageInitialChanges ?? null,
-            applyChangesInBackground: applyChangesInBackground ?? null,
-            skipInitialDeploys: skipInitialDeploys ?? null,
+            sourceEnvironmentId,
+            ephemeral,
+            stageInitialChanges,
+            applyChangesInBackground,
+            skipInitialDeploys,
           },
         },
       });
@@ -302,12 +295,12 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       const result = await railway.environments.logs({
         variables: {
           environmentId,
-          afterLimit: afterLimit ?? null,
-          beforeLimit: beforeLimit ?? null,
-          filter: filter ?? null,
-          afterDate: afterDate ?? null,
-          beforeDate: beforeDate ?? null,
-          anchorDate: anchorDate ?? null,
+          afterLimit,
+          beforeLimit,
+          filter,
+          afterDate,
+          beforeDate,
+          anchorDate,
         },
       });
 
@@ -350,26 +343,22 @@ export const registerEnvironmentTools = (server: McpServer): void => {
             updatedAt: z.string(),
             deletedAt: z.string().nullable(),
             unmergedChangesCount: z.number().int().nullable(),
-            volumeInstances: z.object({
-              edges: z.array(
-                z.object({
-                  node: z.object({
-                    __typename: z.string().optional(),
-                    id: z.string(),
-                    environmentId: z.string(),
-                    volumeId: z.string(),
-                    mountPath: z.string(),
-                    state: z.string(),
-                    createdAt: z.string(),
-                    currentSizeMB: z.number().nullable(),
-                    sizeMB: z.number().nullable(),
-                    region: z.string().nullable(),
-                    serviceId: z.string().nullable(),
-                    externalId: z.string().nullable(),
-                  }),
-                }),
-              ),
-            }),
+            volumeInstances: z.array(
+              z.object({
+                __typename: z.string().optional(),
+                id: z.string(),
+                environmentId: z.string(),
+                volumeId: z.string(),
+                mountPath: z.string(),
+                state: z.string(),
+                createdAt: z.string(),
+                currentSizeMB: z.number().nullable(),
+                sizeMB: z.number().nullable(),
+                region: z.string().nullable(),
+                serviceId: z.string().nullable(),
+                externalId: z.string().nullable(),
+              }),
+            ),
           })
           .nullable(),
       },
@@ -379,11 +368,7 @@ export const registerEnvironmentTools = (server: McpServer): void => {
       const listResult = await railway.environments.list({
         variables: {
           projectId,
-          isEphemeral: null,
           first: 100,
-          after: null,
-          last: null,
-          before: null,
         },
       });
 
@@ -404,16 +389,14 @@ export const registerEnvironmentTools = (server: McpServer): void => {
         );
       }
 
-      const connection = environmentsResult.value as {
-        edges?: { node: { id: string; name: string } }[];
-      };
-      const env = connection.edges?.find((edge) => edge.node.name === name);
+      const environments = environmentsResult.value as { id: string; name: string }[];
+      const env = environments.find((e) => e.name === name);
       if (!env) {
         return successResponse({ environment: null });
       }
 
       const envResult = await railway.environments.get({
-        variables: { id: env.node.id },
+        variables: { id: env.id },
       });
       if (envResult.isErr()) {
         return errorResponse(toRailwayErrorMessage(envResult.error));

@@ -43,31 +43,25 @@ export const registerServiceTools = (server: McpServer): void => {
         before: z.string().describe('Cursor for the previous page.').optional(),
       },
       outputSchema: {
-        services: z.object({
-          __typename: z.string().optional(),
-          edges: z.array(
-            z.object({
-              cursor: z.string(),
-              node: z.object({
-                __typename: z.string().optional(),
-                id: z.string(),
-                name: z.string(),
-                icon: z.string().nullable(),
-                createdAt: z.string(),
-                updatedAt: z.string(),
-                deletedAt: z.string().nullable(),
-                projectId: z.string(),
-                templateServiceId: z.string().nullable(),
-                templateThreadSlug: z.string().nullable(),
-              }),
-            }),
-          ),
-          pageInfo: z.object({
-            hasNextPage: z.boolean(),
-            hasPreviousPage: z.boolean(),
-            startCursor: z.string().nullable(),
-            endCursor: z.string().nullable(),
+        services: z.array(
+          z.object({
+            __typename: z.string().optional(),
+            id: z.string(),
+            name: z.string(),
+            icon: z.string().nullable(),
+            createdAt: z.string(),
+            updatedAt: z.string(),
+            deletedAt: z.string().nullable(),
+            projectId: z.string(),
+            templateServiceId: z.string().nullable(),
+            templateThreadSlug: z.string().nullable(),
           }),
+        ),
+        pageInfo: z.object({
+          hasNextPage: z.boolean(),
+          hasPreviousPage: z.boolean(),
+          startCursor: z.string().nullable(),
+          endCursor: z.string().nullable(),
         }),
       },
     },
@@ -80,10 +74,10 @@ export const registerServiceTools = (server: McpServer): void => {
       const result = await railway.services.list({
         variables: {
           projectId,
-          first: first ?? null,
-          after: after ?? null,
-          last: last ?? null,
-          before: before ?? null,
+          first,
+          after,
+          last,
+          before,
         },
       });
 
@@ -185,8 +179,8 @@ export const registerServiceTools = (server: McpServer): void => {
         variables: {
           id: serviceId,
           input: {
-            name: name ?? null,
-            icon: icon ?? null,
+            name,
+            icon,
           },
         },
       });
@@ -229,7 +223,7 @@ export const registerServiceTools = (server: McpServer): void => {
         variables: {
           serviceId,
           environmentId,
-          commitSha: commitSha ?? null,
+          commitSha,
         },
       });
 
@@ -292,13 +286,9 @@ export const registerServiceTools = (server: McpServer): void => {
           input: {
             projectId,
             environmentId,
-            name: name ?? null,
-            icon: icon ?? null,
-            branch: branch ?? null,
-            source: null,
-            registryCredentials: null,
-            templateServiceId: null,
-            variables: null,
+            name,
+            icon,
+            branch,
           },
         },
       });
@@ -317,7 +307,7 @@ export const registerServiceTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway_service_instance_build_command_update',
+    'railway_service_instance_build_command',
     {
       title: 'Update Service Instance Build Command',
       description:
@@ -365,7 +355,7 @@ export const registerServiceTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway_service_instance_start_command_update',
+    'railway_service_instance_start_command',
     {
       title: 'Update Service Instance Start Command',
       description:
@@ -413,7 +403,7 @@ export const registerServiceTools = (server: McpServer): void => {
   );
 
   server.registerTool(
-    'railway_service_instance_predeploy_commands_update',
+    'railway_service_instance_predeploy',
     {
       title: 'Update Service Instance Pre-deploy Commands',
       description:
