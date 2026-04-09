@@ -6,6 +6,26 @@
 
 An unofficial Model Context Protocol (MCP) server for exposing Railway resources and automation tools to MCP-compatible clients.
 
+## Remote HTTP Setup (for Claude.ai connector)
+
+This fork adds remote HTTP transport via [supergateway](https://github.com/supercorp-ai/supergateway) so the Railway MCP server can be used as a [Claude.ai custom connector](https://support.anthropic.com/en/articles/11175166-about-custom-connectors-remote-mcp). The upstream package only ships a stdio binary; supergateway wraps it and exposes an SSE HTTP endpoint suitable for remote MCP clients.
+
+### Deploy to Railway
+
+1. **Deploy from this GitHub repo** — In Railway, create a new project and deploy from this forked GitHub repository. Railway will detect the `Dockerfile` and `railway.json` automatically.
+2. **Set `RAILWAY_API_TOKEN`** — In the Railway service's **Variables** tab, add `RAILWAY_API_TOKEN` with your Railway API token (see [Authentication](#authentication) below for how to create one).
+3. **Generate a public domain** — In the Railway service's **Settings → Networking**, click **Generate Domain**. Railway will assign a URL like `https://your-service.up.railway.app` and automatically set the `RAILWAY_PUBLIC_DOMAIN` environment variable, which the container uses for the supergateway `--baseUrl` flag.
+
+### Add to Claude.ai
+
+Once deployed, open [claude.ai](https://claude.ai) and go to **Settings → Customize → Connectors → Add custom connector**. Use the SSE endpoint:
+
+```
+https://your-domain.up.railway.app/sse
+```
+
+Replace `your-domain.up.railway.app` with the domain Railway generated for your service. Claude.ai will connect to the remote MCP server and surface all Railway tools to the model.
+
 ## Quick Start
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/en-US/install-mcp?name=railway-mcp-server&config=eyJjb21tYW5kIjoibnB4IC15IEBjcmlzb2cvcmFpbHdheS1tY3Atc2VydmVyIn0%3D)
