@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "railway": {
+      "type": "sse",
+      "url": "https://railway-mcp-server-production-00ff.up.railway.app/sse"
+    }
+  }
+}
