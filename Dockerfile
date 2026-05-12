@@ -11,7 +11,11 @@ WORKDIR /app
 
 COPY package.json ./
 COPY bun.lock ./
-RUN npm install --include=dev
+# --ignore-scripts skips the `prepare` lifecycle hook (`node .husky/install.mjs`),
+# which would fail here because .husky/ isn't copied into the Docker context
+# and isn't relevant in a container build anyway -- husky only wires up local
+# git hooks. None of the runtime deps need install-time scripts.
+RUN npm install --include=dev --ignore-scripts
 
 COPY tsconfig.json tsdown.config.ts ./
 COPY src ./src
@@ -34,8 +38,9 @@ COPY --from=builder /app/package.json ./package.json
 
 # supergateway stays pinned at v3 (the version where stdio->streamableHttp
 # multi-session handling actually works). Installed globally so it's on PATH.
+# --ignore-scripts here too, for the same reason as the builder stage.
 ARG SUPERGATEWAY_VERSION=3
-RUN npm install -g "supergateway@${SUPERGATEWAY_VERSION}"
+RUN npm install -g --ignore-scripts "supergateway@${SUPERGATEWAY_VERSION}"
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
