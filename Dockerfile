@@ -1,9 +1,25 @@
-FROM node:20-slim
+FROM node:20-alpine
+
+# tini reaps zombie children. supergateway spawns a fresh stdio
+# `railway-mcp-server` process per SSE session; without an init process,
+# defunct children pile up after every Claude.ai reconnect until the
+# container hits the PID limit or OOMs.
+RUN apk add --no-cache tini
 
 WORKDIR /app
 
-RUN npm install -g @crisog/railway-mcp-server supergateway
+# Pin upstream versions so a surprise breaking release on npm can't take
+# the deploy down. Bump these by hand when you want a newer version.
+ARG RAILWAY_MCP_VERSION=0.0.2
+ARG SUPERGATEWAY_VERSION=3
+RUN npm install -g \
+      "@crisog/railway-mcp-server@${RAILWAY_MCP_VERSION}" \
+      "supergateway@${SUPERGATEWAY_VERSION}"
 
-EXPOSE ${PORT:-8080}
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-CMD ["sh", "-c", "supergateway --stdio 'railway-mcp-server' --port ${PORT:-8080} --baseUrl https://${RAILWAY_PUBLIC_DOMAIN}"]
+EXPOSE 8080
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["/usr/local/bin/entrypoint.sh"]
