@@ -28,18 +28,22 @@ fi
 
 echo "Starting supergateway on :${PORT} (baseUrl=${BASE_URL})"
 
-# Use streamableHttp instead of SSE. supergateway v3's stdioToSse gateway
-# reuses a single McpServer across SSE connections and throws "Already
-# connected to a transport" on the second connect (Claude.ai's probe-then-use
-# flow trips this every time). The streamableHttp gateway handles session
-# reconnects via the Mcp-Session-Id header on a single POST /mcp endpoint
-# and does not have this bug.
+# Run the locally-built MCP via node, not the global railway-mcp-server
+# binary. Local build registers only the tools defined in src/tools/*.ts
+# (no railway_verify_connection), so Claude sessions can't be misled by
+# its perpetual "Not Authorized" response.
+#
+# streamableHttp instead of sse: supergateway v3's stdioToSse gateway reuses
+# a single McpServer across SSE connects and throws "Already connected to a
+# transport" on Claude.ai's normal probe-then-use flow. streamableHttp uses
+# a different gateway that handles session reconnects via the
+# Mcp-Session-Id header on POST /mcp and does not have this bug.
 #
 # exec so SIGTERM from Railway reaches supergateway directly; without exec
 # the parent /bin/sh swallows the signal, dropping in-flight requests on
 # every redeploy.
 exec supergateway \
-  --stdio 'railway-mcp-server' \
+  --stdio 'node /app/dist/index.js' \
   --port "${PORT}" \
   --baseUrl "${BASE_URL}" \
   --outputTransport streamableHttp \
