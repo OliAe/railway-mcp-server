@@ -8,23 +8,51 @@ An unofficial Model Context Protocol (MCP) server for exposing Railway resources
 
 ## Remote HTTP Setup (for Claude.ai connector)
 
-This fork adds remote HTTP transport via [supergateway](https://github.com/supercorp-ai/supergateway) so the Railway MCP server can be used as a [Claude.ai custom connector](https://support.anthropic.com/en/articles/11175166-about-custom-connectors-remote-mcp). The upstream package only ships a stdio binary; supergateway wraps it and exposes an SSE HTTP endpoint suitable for remote MCP clients.
+This fork serves the Railway MCP server over **Streamable HTTP** at `/mcp` so it can be used as a [Claude.ai custom connector](https://support.anthropic.com/en/articles/11175166-about-custom-connectors-remote-mcp). The MCP server runs in-process behind a small Express app (`src/http.ts`) — there is no `supergateway` child process.
+
+Because this server controls your entire Railway account through the baked-in `RAILWAY_API_TOKEN`, the `/mcp` endpoint should require a login. With `OAUTH_ENABLED=true` the server advertises OAuth 2.1 discovery, proxies `/authorize` + `/token` to **Auth0**, and verifies the returned JWT against Auth0's JWKS on every request (returning `401` + `WWW-Authenticate` otherwise). It acts as a thin OAuth proxy in front of Auth0 — it is not a full auth server.
+
+### Environment variables
+
+| Variable                  | Required            | Description                                                                                              |
+| ------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------- |
+| `RAILWAY_API_TOKEN`       | yes                 | Railway API token the tools act with (see [Authentication](#authentication)).                            |
+| `OAUTH_ENABLED`           | recommended         | `true` to require an Auth0 login on `/mcp`. If unset, `/mcp` is served **unauthenticated** (a warning is logged). |
+| `AUTH0_DOMAIN`            | if OAuth enabled    | Auth0 tenant domain, e.g. `your-tenant.us.auth0.com`.                                                     |
+| `AUTH0_AUDIENCE`          | if OAuth enabled    | The Auth0 API identifier for this server, e.g. `https://<your-domain>/mcp`. Injected as `audience` on `/authorize` so Auth0 mints a verifiable JWT. |
+| `PUBLIC_URL`              | no                  | Public base URL. Defaults to `https://$RAILWAY_PUBLIC_DOMAIN`, then `http://localhost:$PORT`.            |
+| `OAUTH_ALLOWED_CLIENT_IDS`| no                  | Comma-separated allow-list of Auth0 client IDs permitted to log in (defense in depth). Unset = accept any client Auth0 recognises. |
+| `ALLOWED_HOSTS`           | no                  | Comma-separated `Host` allow-list to enable DNS-rebinding protection on the transport.                   |
+| `PORT`                    | no                  | Listen port. Railway sets this automatically (defaults to `8080`).                                       |
 
 ### Deploy to Railway
 
-1. **Deploy from this GitHub repo** — In Railway, create a new project and deploy from this forked GitHub repository. Railway will detect the `Dockerfile` and `railway.json` automatically.
-2. **Set `RAILWAY_API_TOKEN`** — In the Railway service's **Variables** tab, add `RAILWAY_API_TOKEN` with your Railway API token (see [Authentication](#authentication) below for how to create one).
-3. **Generate a public domain** — In the Railway service's **Settings → Networking**, click **Generate Domain**. Railway will assign a URL like `https://your-service.up.railway.app` and automatically set the `RAILWAY_PUBLIC_DOMAIN` environment variable, which the container uses for the supergateway `--baseUrl` flag.
+1. **Deploy from this GitHub repo** — In Railway, create a project from this repository. Railway detects the `Dockerfile` and `railway.json` automatically.
+2. **Set `RAILWAY_API_TOKEN`** — In the service's **Variables** tab, add your Railway API token.
+3. **Generate a public domain** — In **Settings → Networking → Generate Domain**. Railway assigns `https://your-service.up.railway.app` and sets `RAILWAY_PUBLIC_DOMAIN`, which the server uses to build its OAuth discovery URLs.
+4. **Enable OAuth** — Set `OAUTH_ENABLED=true`, `AUTH0_DOMAIN`, and `AUTH0_AUDIENCE` (see [Auth0 setup](#auth0-setup-static-client) below), then redeploy.
+
+### Auth0 setup (static client)
+
+Dynamic Client Registration (DCR) is intentionally **disabled** (no `registration_endpoint` is advertised). On Auth0 dev tenants DCR creates a new app per connection and quickly hits the tenant app cap, which breaks new logins. Instead, pre-create **one** shared client and have each user paste its Client ID into Claude.
+
+1. Create an **API** in Auth0 whose identifier matches `AUTH0_AUDIENCE` (e.g. `https://<your-domain>/mcp`).
+2. Create one **native** client (`token_endpoint_auth_method: none`, grant types `authorization_code` + `refresh_token`, refresh `rotation_type: non-rotating`) with these callback URLs:
+   - `https://claude.ai/api/mcp/auth_callback`
+   - `https://claude.com/api/mcp/auth_callback`
+   - `http://localhost/callback`
+   - `http://127.0.0.1/callback`
+3. Make sure the client can use your login database connection (a domain connection is enabled for all apps; otherwise enable the client on the connection).
 
 ### Add to Claude.ai
 
-Once deployed, open [claude.ai](https://claude.ai) and go to **Settings → Customize → Connectors → Add custom connector**. Use the SSE endpoint:
+Open [claude.ai](https://claude.ai) → **Settings → Connectors → Add custom connector**:
 
 ```
-https://your-domain.up.railway.app/sse
+https://your-domain.up.railway.app/mcp
 ```
 
-Replace `your-domain.up.railway.app` with the domain Railway generated for your service. Claude.ai will connect to the remote MCP server and surface all Railway tools to the model.
+Click **Advanced settings**, set **OAuth Client ID** to the shared client's ID (leave **Client Secret** blank), then **Add** and log in at the Auth0 screen.
 
 ## Quick Start
 
