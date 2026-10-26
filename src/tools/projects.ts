@@ -1,8 +1,38 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { unwrapField } from '@crisog/railway-sdk';
-import { getRailway, toRailwayErrorMessage } from '../client.js';
+import { getRailway, getRailwayClient, toRailwayErrorMessage } from '../client.js';
 import { errorResponse, successResponse } from './responses.js';
+
+// Fields every Railway Workspace still exposes. Kept explicit (rather than the
+// SDK's generated selection) so a field Railway drops fails here, not silently.
+const WORKSPACE_FIELDS =
+  'id name avatar createdAt preferredRegion subscriptionModel banReason discordRole slackChannelId';
+
+const workspaceSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  avatar: z.string().nullable(),
+  createdAt: z.string(),
+  preferredRegion: z.string().nullable(),
+  subscriptionModel: z.string(),
+  banReason: z.string().nullable(),
+  discordRole: z.string().nullable(),
+  slackChannelId: z.string().nullable(),
+});
+
+type Workspace = z.infer<typeof workspaceSchema>;
+
+// The SDK flattens `edges { node }` connections into arrays; accept either shape.
+const extractNodes = <T>(connection: { edges: { node: T }[] } | T[] | null | undefined): T[] => {
+  if (!connection) {
+    return [];
+  }
+  if (Array.isArray(connection)) {
+    return connection;
+  }
+  return connection.edges.map((edge) => edge.node);
+};
 
 const projectIdSchema = z
   .string()
@@ -151,52 +181,9 @@ export const registerProjectTools = (server: McpServer): void => {
           expiredAt: z.string().nullable(),
           isTempProject: z.boolean(),
           subscriptionType: z.string(),
-          subscriptionPlanLimit: z.object({
-            includedUsageDollars: z.number(),
-            projects: z.number(),
-            project: z.object({
-              members: z.number().nullable(),
-              services: z.number(),
-              buckets: z.number(),
-            }),
-            volumes: z.object({
-              defaultSizeMB: z.number(),
-              maxSizeMB: z.number(),
-              maxPerProject: z.number(),
-              maxBackupsCount: z.number(),
-              maxBackupsUsagePercent: z.number(),
-            }),
-            containers: z.object({
-              cpu: z.number(),
-              cpuDescription: z.string(),
-              memoryBytes: z.number(),
-              memoryDescription: z.string(),
-              diskBytes: z.number(),
-              diskDescription: z.string(),
-              pidLimit: z.number(),
-            }),
-            builds: z.object({
-              concurrent: z.number(),
-              timeout: z.object({
-                soft: z.number(),
-                hard: z.number(),
-              }),
-              maxImageSizeBytes: z.number(),
-            }),
-            deploys: z.object({
-              replicas: z.number(),
-            }),
-            observability: z.object({
-              logRetentionDays: z.number(),
-            }),
-            networking: z.object({
-              customDomains: z.number(),
-              serviceDomains: z.number(),
-            }),
-            apiTokens: z.object({
-              pointsToConsume: z.number(),
-            }),
-          }),
+          // Railway's plan-limit JSON changes shape with its plans (e.g. `buckets` moved
+          // out of `project`), so pass it through rather than pin a stale shape.
+          subscriptionPlanLimit: z.record(z.string(), z.unknown()),
         }),
       },
     },
@@ -253,52 +240,9 @@ export const registerProjectTools = (server: McpServer): void => {
           expiredAt: z.string().nullable(),
           isTempProject: z.boolean(),
           subscriptionType: z.string(),
-          subscriptionPlanLimit: z.object({
-            includedUsageDollars: z.number(),
-            projects: z.number(),
-            project: z.object({
-              members: z.number().nullable(),
-              services: z.number(),
-              buckets: z.number(),
-            }),
-            volumes: z.object({
-              defaultSizeMB: z.number(),
-              maxSizeMB: z.number(),
-              maxPerProject: z.number(),
-              maxBackupsCount: z.number(),
-              maxBackupsUsagePercent: z.number(),
-            }),
-            containers: z.object({
-              cpu: z.number(),
-              cpuDescription: z.string(),
-              memoryBytes: z.number(),
-              memoryDescription: z.string(),
-              diskBytes: z.number(),
-              diskDescription: z.string(),
-              pidLimit: z.number(),
-            }),
-            builds: z.object({
-              concurrent: z.number(),
-              timeout: z.object({
-                soft: z.number(),
-                hard: z.number(),
-              }),
-              maxImageSizeBytes: z.number(),
-            }),
-            deploys: z.object({
-              replicas: z.number(),
-            }),
-            observability: z.object({
-              logRetentionDays: z.number(),
-            }),
-            networking: z.object({
-              customDomains: z.number(),
-              serviceDomains: z.number(),
-            }),
-            apiTokens: z.object({
-              pointsToConsume: z.number(),
-            }),
-          }),
+          // Railway's plan-limit JSON changes shape with its plans (e.g. `buckets` moved
+          // out of `project`), so pass it through rather than pin a stale shape.
+          subscriptionPlanLimit: z.record(z.string(), z.unknown()),
         }),
       },
     },
@@ -327,41 +271,59 @@ export const registerProjectTools = (server: McpServer): void => {
     'railway_workspaces_list',
     {
       title: 'List Workspaces',
-      description: 'List all workspaces the user is a member of.',
+      description:
+        'List the workspaces this token can see. Account tokens list every workspace the user ' +
+        'belongs to; workspace tokens list the workspace they are scoped to.',
       inputSchema: {},
       outputSchema: {
-        workspaces: z.array(
-          z.object({
-            __typename: z.string().optional(),
-            id: z.string(),
-            name: z.string(),
-            avatar: z.string().nullable(),
-            createdAt: z.string(),
-            preferredRegion: z.string().nullable(),
-            subscriptionModel: z.string(),
-            supportTierOverride: z.string().nullable(),
-            banReason: z.string().nullable(),
-            discordRole: z.string().nullable(),
-            slackChannelId: z.string().nullable(),
-          }),
-        ),
+        workspaces: z.array(workspaceSchema),
       },
     },
     async () => {
-      const railway = getRailway();
-      const result = await railway.account.me();
+      const client = getRailwayClient();
 
-      if (result.isErr()) {
-        return errorResponse(toRailwayErrorMessage(result.error));
+      // Account tokens can read `me`. The SDK's generated MeDocument selects
+      // Workspace.supportTierOverride, which Railway has removed, so every call
+      // failed schema validation -- hence the hand-written selection here.
+      const meResult = await client.request<{ me: { workspaces: Workspace[] | null } }>({
+        query: `query workspacesForMe { me { workspaces { ${WORKSPACE_FIELDS} } } }`,
+      });
+      if (meResult.isOk()) {
+        return successResponse({ workspaces: meResult.value.me?.workspaces ?? [] });
       }
 
-      const meResult = unwrapField(result, 'me', 'User not found.');
-      if (meResult.isErr()) {
-        return errorResponse(meResult.error.message);
+      // Workspace (team) tokens are refused `me` with "Not Authorized". They can
+      // still list projects, so resolve the distinct workspaces those belong to.
+      const projectsResult = await client.request<{
+        projects:
+          | { edges: { node: { workspaceId: string | null } }[] }
+          | { workspaceId: string | null }[];
+      }>({
+        query: 'query workspaceIdsFromProjects { projects { edges { node { workspaceId } } } }',
+      });
+      if (projectsResult.isErr()) {
+        return errorResponse(toRailwayErrorMessage(meResult.error));
       }
 
-      const me = meResult.value;
-      const workspaces = me.workspaces ?? [];
+      const workspaceIds = [
+        ...new Set(
+          extractNodes<{ workspaceId: string | null }>(projectsResult.value.projects)
+            .map((project) => project.workspaceId)
+            .filter((id): id is string => Boolean(id)),
+        ),
+      ];
+
+      const workspaces: Workspace[] = [];
+      for (const workspaceId of workspaceIds) {
+        const workspaceResult = await client.request<{ workspace: Workspace }>({
+          query: `query workspaceById($workspaceId: String!) { workspace(workspaceId: $workspaceId) { ${WORKSPACE_FIELDS} } }`,
+          variables: { workspaceId },
+        });
+        if (workspaceResult.isErr()) {
+          return errorResponse(toRailwayErrorMessage(workspaceResult.error));
+        }
+        workspaces.push(workspaceResult.value.workspace);
+      }
 
       return successResponse({ workspaces });
     },
