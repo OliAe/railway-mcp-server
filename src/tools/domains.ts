@@ -89,9 +89,15 @@ export const registerDomainTools = (server: McpServer): void => {
         serviceId: serviceIdSchema,
       },
       outputSchema: {
-        domains: z.object({
-          __typename: z.string().optional(),
-        }),
+        // `.passthrough()` keeps the JSON schema open: a closed object here
+        // rejected every real response (serviceDomains / customDomains).
+        domains: z
+          .object({
+            __typename: z.string().optional(),
+            serviceDomains: z.array(z.record(z.string(), z.unknown())).optional(),
+            customDomains: z.array(z.record(z.string(), z.unknown())).optional(),
+          })
+          .passthrough(),
       },
     },
     async ({ projectId, environmentId, serviceId }) => {

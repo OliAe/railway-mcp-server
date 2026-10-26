@@ -45,7 +45,18 @@ export const toRailwayErrorMessage = (error: unknown): string => {
   }
 
   if (error instanceof GraphQLRequestError) {
-    const message = `Railway request failed: ${error.message}`;
+    let message = `Railway request failed: ${error.message}`;
+
+    // Railway answers "Not Authorized" both for resources outside the token's
+    // reach and for user-level queries a workspace token may not make, which
+    // otherwise reads like a broken token.
+    if (/not authorized/i.test(error.message)) {
+      message +=
+        '\nHint: this token cannot reach that resource. An account token only sees workspaces ' +
+        'its user belongs to; a workspace token only sees its own workspace and cannot call ' +
+        'user-level APIs (e.g. GitHub repo listing). Check which Railway account/workspace ' +
+        'owns the resource and use a token from it.';
+    }
 
     if (error.rawBody) {
       const preview =
