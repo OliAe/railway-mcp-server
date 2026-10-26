@@ -107,7 +107,9 @@ export const registerIntegrationTools = (server: McpServer): void => {
     'railway_github_repo_deploy',
     {
       title: 'Deploy from GitHub Repository',
-      description: 'Deploy a GitHub repository to a Railway project.',
+      description:
+        'Deploy a GitHub repository to a Railway project. Creates a new service in that ' +
+        'project and returns its serviceId.',
       inputSchema: {
         projectId: projectIdSchema,
         repo: z
@@ -118,6 +120,7 @@ export const registerIntegrationTools = (server: McpServer): void => {
       },
       outputSchema: {
         projectId: z.string(),
+        serviceId: z.string(),
       },
     },
     async ({ projectId, repo, branch }) => {
@@ -136,16 +139,18 @@ export const registerIntegrationTools = (server: McpServer): void => {
         return errorResponse(toRailwayErrorMessage(result.error));
       }
 
-      const projectIdResult = unwrapField(
+      // githubRepoDeploy returns the ID of the service it created, not a project ID
+      // (verified live: the value matched the new service in services_list).
+      const serviceIdResult = unwrapField(
         result,
         'githubRepoDeploy',
         'Failed to deploy repository.',
       );
-      if (projectIdResult.isErr()) {
-        return errorResponse(projectIdResult.error.message);
+      if (serviceIdResult.isErr()) {
+        return errorResponse(serviceIdResult.error.message);
       }
 
-      return successResponse({ projectId: projectIdResult.value });
+      return successResponse({ projectId, serviceId: serviceIdResult.value });
     },
   );
 };
